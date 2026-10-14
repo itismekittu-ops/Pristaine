@@ -1,0 +1,213 @@
+/* Fonts are self-hosted from npm packages; no third-party font request is made by visitors. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/sora/400.css';
+@import '@fontsource/sora/500.css';
+@import '@fontsource/sora/600.css';
+
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+@layer base {
+  html {
+    background-color: theme('colors.ink.950');
+    color-scheme: dark;
+    scroll-padding-top: theme('spacing.24');
+  }
+  body {
+    @apply bg-ink-950 font-sans text-body font-normal text-on-dark antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading font-semibold;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+/* Hero poster: covers the whole hero, including behind the brand strip, anchored right and centre */
+.hero-poster,
+.hero-poster-desktop,
+.hero-poster-mobile {
+  object-position: right center;
+}
+/*
+  Bottom fade: the lowest 35% of the hero blends from transparent into solid ink-950.
+  Extra eased stops avoid a visible band or tonal step at any width.
+*/
+.hero-bottom-fade {
+  height: 35%;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 16, 32, 0) 0%,
+    rgba(11, 16, 32, 0.15) 20%,
+    rgba(11, 16, 32, 0.4) 40%,
+    rgba(11, 16, 32, 0.7) 60%,
+    rgba(11, 16, 32, 0.92) 80%,
+    rgba(11, 16, 32, 1) 100%
+  );
+}
+/*
+  Hero scrim: ink-950 behind the centred text block. The ~78% core keeps headline,
+  notice and caption at ≥ 4.5:1 over the brightest part of the bubble.
+*/
+.hero-scrim-desktop,
+.hero-scrim {
+  background: radial-gradient(
+    ellipse 55% 60% at 50% 46%,
+    rgba(11, 16, 32, 0.78) 0%,
+    rgba(11, 16, 32, 0.78) 60%,
+    rgba(11, 16, 32, 0) 100%
+  );
+}
+.hero-scrim-mobile {
+  background: radial-gradient(
+    ellipse 100% 70% at 50% 48%,
+    rgba(11, 16, 32, 0.8) 0%,
+    rgba(11, 16, 32, 0.8) 60%,
+    rgba(11, 16, 32, 0.4) 100%
+  );
+}
+@media (max-width: 767px) {
+  .hero-scrim {
+    background: radial-gradient(
+      ellipse 100% 70% at 50% 48%,
+      rgba(11, 16, 32, 0.8) 0%,
+      rgba(11, 16, 32, 0.8) 60%,
+      rgba(11, 16, 32, 0.4) 100%
+    );
+  }
+}
+/*
+  Service card scrim: bottom 75% of each card. A solid 85% ink-950 band covers the lower 55%
+  (the whole text block, even on 4:5 mobile cards with wrapped copy), so the name and the
+  muted description stay at ≥ 4.5:1 over a pure-white image.
+*/
+.card-scrim {
+  height: 75%;
+  background: linear-gradient(
+    to top,
+    rgba(11, 16, 32, 0.85) 0%,
+    rgba(11, 16, 32, 0.85) 55%,
+    rgba(11, 16, 32, 0.55) 80%,
+    rgba(11, 16, 32, 0) 100%
+  );
+}
+/*
+  Insight card scrim: bottom 75% of each card. A solid 85% ink-950 band covers the lower 55%,
+  so white titles, summaries and the Read link stay at ≥ 4.5:1 over a pure-white image.
+*/
+.insight-scrim {
+  height: 75%;
+  background: linear-gradient(
+    to top,
+    rgba(11, 16, 32, 0.85) 0%,
+    rgba(11, 16, 32, 0.85) 55%,
+    rgba(11, 16, 32, 0.55) 80%,
+    rgba(11, 16, 32, 0) 100%
+  );
+}
+/* How it works: thin outline numerals */
+.outline-numeral {
+  color: transparent;
+  -webkit-text-stroke: 1px theme('colors.on-dark');
+  display: block;
+  line-height: 1;
+}
+/*
+  How it works orb: CSS only. Radial aqua at the top-left, indigo through the middle,
+  violet at the bottom-right. A solid indigo core (92%) sits behind the centred title, so
+  on-dark text stays ≥ 4.5:1 even where it overlaps aqua. Soft glow allowed for this orb only.
+*/
+.process-orb {
+  background:
+    radial-gradient(
+      ellipse 56% 40% at 50% 50%,
+      rgba(79, 70, 229, 0.92) 0%,
+      rgba(79, 70, 229, 0.92) 65%,
+      rgba(79, 70, 229, 0) 100%
+    ),
+    radial-gradient(circle at 50% 50%, rgba(11, 16, 32, 0) 70%, rgba(11, 16, 32, 0.2) 100%),
+    radial-gradient(
+      circle at 18% 14%,
+      theme('colors.deco.aqua') 0%,
+      theme('colors.deco.aqua') 10%,
+      theme('colors.deco.indigo') 42%,
+      theme('colors.deco.indigo') 58%,
+      theme('colors.deco.violet') 100%
+    );
+  box-shadow:
+    0 0 64px 8px rgba(79, 70, 229, 0.45),
+    0 0 120px 24px rgba(45, 212, 191, 0.15);
+}
+/* Hero poster: slow drift standing in for the looping video */
+@keyframes hero-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.04);
+  }
+}
+.hero-drift {
+  transform-origin: 80% 50%;
+  animation: hero-drift 24s ease-in-out infinite alternate;
+}
+/* Closing CTA still: slow centred drift standing in for the looping video */
+.cta-drift {
+  transform-origin: 50% 50%;
+  animation: hero-drift 24s ease-in-out infinite alternate;
+}
+/*
+  Closing CTA core scrim: ink-950 at 60%, ~700 × 300, solid through the middle and fading
+  to transparent at the edges. Stacked on the 35% base scrim, the text sits on ≥ 74% ink,
+  so on-dark text stays ≥ 8:1 even if a streak passes behind it.
+*/
+.cta-scrim-core {
+  background: radial-gradient(
+    ellipse 350px 150px at 50% 50%,
+    rgba(11, 16, 32, 0.6) 0%,
+    rgba(11, 16, 32, 0.6) 55%,
+    rgba(11, 16, 32, 0) 100%
+  );
+}
+/* Brand strip: seamless marquee, paused on hover and keyboard focus */
+@keyframes brand-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.brand-marquee-track {
+  animation: brand-marquee 60s linear infinite;
+}
+.brand-marquee:hover .brand-marquee-track,
+.brand-marquee:focus-within .brand-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-drift,
+  .cta-drift,
+  .brand-marquee-track {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

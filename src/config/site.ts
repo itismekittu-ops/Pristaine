@@ -1,0 +1,47 @@
+export const siteConfig = {
+  name: 'Pristaine',
+  url: process.env.SITE_URL || 'https://pristaine.com',
+  mission: 'Pristaine builds clean, reliable AI for customer conversations and operations, with guardrails, testing and measurable results built in.',
+  publicRoutes: [
+    {
+      path: '/',
+      title: 'Pristaine | Reliable Chat and Voice AI for Business',
+      description: 'Pristaine builds chat and voice AI for customer conversations, tested before launch and built for privacy in the US and Canada. Book a consultation.',
+      summary: 'Overview of Pristaine and its current services.',
+      changeFrequency: 'monthly' as const,
+      priority: 1,
+    },
+    {
+      path: '/about',
+      title: 'About Pristaine | A Clean, Reliable AI Agency',
+      description: 'Meet Pristaine, an AI agency building tested, privacy-first chat and voice AI for businesses in the US and Canada. See how we work.',
+      summary: 'About Pristaine.',
+      changeFrequency: 'yearly' as const,
+      priority: 0.6,
+    },
+    {
+      path: '/services',
+      title: 'AI Services: Chat, Voice and Custom AI | Pristaine',
+      description: 'Explore Pristaine’s AI services: conversational AI and chatbots, voice AI, custom AI solutions and AI consultation for US and Canadian businesses.',
+      summary: 'Overview of conversational AI and chatbots, voice AI, AI solutions and AI consultation.',
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    {
+      path: '/book',
+      title: 'Book a Consultation | Pristaine',
+      description: 'Talk with Pristaine about customer conversations, voice AI and practical AI opportunities for your business. Start with a focused consultation.',
+      summary: 'Consultation information.',
+      changeFrequency: 'yearly' as const,
+      priority: 0.7,
+    },
+    {
+      path: '/privacy',
+      title: 'Privacy Policy | Pristaine',
+      description: 'How Pristaine handles information from its website, AI assistant, booking and contact form for visitors in the US and Canada.',
+      summary: 'Privacy information and cookie controls.',
+      changeFrequency: 'yearly' as const,
+      priority: 0.2,
+    },
+  ],
+} as const;
