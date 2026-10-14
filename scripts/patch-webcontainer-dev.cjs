@@ -5,20 +5,19 @@ const { spawn } = require("node:child_process");
 
 const root = process.cwd();
 const nextDist = path.join(root, "node_modules", "next", "dist");
-const marker = "/* BOLT_WEBCONTAINER_PATCHED */";
+const marker = "/* BOLT_WEBCONTAINER_PATCHED_V2 */";
 
-// Find all relevant server request files and compiled app-page dev runtimes
-function getTargetFiles(dir, results = []) {
+function getAllJsFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      getTargetFiles(fullPath, results);
+      getAllJsFiles(fullPath, results);
     } else if (
       entry.isFile() &&
-      (entry.name === "params.js" ||
-        entry.name === "search-params.js" ||
-        (entry.name.includes("app-page") && entry.name.endsWith(".dev.js")))
+      (entry.name.endsWith(".js") ||
+        entry.name.endsWith(".cjs") ||
+        entry.name.endsWith(".mjs"))
     ) {
       results.push(fullPath);
     }
@@ -28,45 +27,59 @@ function getTargetFiles(dir, results = []) {
 
 function patchFileContent(content) {
   if (content.includes(marker)) return content;
-  if (
-    !content.includes("throwInvariantForMissingStore") &&
-    !content.includes("Expected workUnitAsyncStorage to have a store")
-  ) {
+  if (!content.includes("Expected workUnitAsyncStorage to have a store")) {
     return content;
   }
 
   let updated = content;
 
-  // 1. Patch createServerParamsForServerSegment (CJS, ESM, and compiled bundles)
+  // 1. Neutralize `function throwInvariantForMissingStore() { throw new ... }`
+  // In Next.js 15.5.x, `params.js` and `search-params.js` have:
+  //   if (workUnitStore) { switch (...) { ... } } else { throwInvariantForMissingStore(); }
+  //   return createRenderParamsInDev(underlyingParams, void 0, workStore);
+  // By making `throwInvariantForMissingStore()` return undefined instead of throwing,
+  // execution naturally falls through to `return createRenderParamsInDev(...)` / `createRenderSearchParamsInDev(...)`!
   updated = updated.replace(
-    /(function createServerParamsForServerSegment\s*\([^)]*\)\s*\{[\s\S]*?)throwInvariantForMissingStore\(\)\s*;?/g,
-    `$1return createRenderParamsInDev(underlyingParams, void 0, workStore); ${marker}`
+    /function\s+throwInvariantForMissingStore\s*\(\s*\)\s*\{[\s\S]*?Expected workUnitAsyncStorage to have a store[\s\S]*?\}/g,
+    `function throwInvariantForMissingStore() { ${marker} return; }`
   );
 
-  // 2. Patch createServerSearchParamsForServerPage (CJS, ESM, and compiled bundles)
-  // Note: Next 15.5.x uses either createRenderSearchParamsInDev or createRenderSearchParams
+  // 2. Catch any direct inline throws of "Expected workUnitAsyncStorage to have a store"
+  // (e.g., in compiled app-page.runtime.dev.js or work-unit-async-storage)
   updated = updated.replace(
-    /(function createServerSearchParamsForServerPage\s*\([^)]*\)\s*\{[\s\S]*?)throwInvariantForMissingStore\(\)\s*;?/g,
-    `$1return (typeof createRenderSearchParamsInDev === "function" ? createRenderSearchParamsInDev(underlyingSearchParams, workStore) : createRenderSearchParams(underlyingSearchParams, workStore)); ${marker}`
+    /throw\s+new\s+[a-zA-Z0-9_$.]*InvariantError\s*\(\s*["'`]Expected workUnitAsyncStorage to have a store[\s\S]*?\)\s*;?/g,
+    `{ ${marker} }`
   );
 
   return updated;
 }
 
-const targetFiles = [
-  ...getTargetFiles(path.join(nextDist, "server", "request")),
-  ...getTargetFiles(path.join(nextDist, "esm", "server", "request")),
-  ...getTargetFiles(path.join(nextDist, "compiled", "next-server")),
+// Scan server/, esm/server/, and compiled/next-server/
+const targetDirs = [
+  path.join(nextDist, "server"),
+  path.join(nextDist, "esm", "server"),
+  path.join(nextDist, "compiled", "next-server"),
 ];
+
+const targetFiles = [];
+for (const dir of targetDirs) {
+  getAllJsFiles(dir, targetFiles);
+}
 
 let patchedCount = 0;
 for (const file of targetFiles) {
   try {
-    // If a backup exists from a previous run, read from the clean backup first
     const backupPath = file + ".bolt-original";
+    // Always start from the clean original if a backup exists
     const sourceContent = fs.existsSync(backupPath)
       ? fs.readFileSync(backupPath, "utf8")
       : fs.readFileSync(file, "utf8");
+
+    if (
+      !sourceContent.includes("Expected workUnitAsyncStorage to have a store")
+    ) {
+      continue;
+    }
 
     const patched = patchFileContent(sourceContent);
     if (patched !== sourceContent) {
@@ -82,14 +95,21 @@ for (const file of targetFiles) {
   }
 }
 
+// Clear Next.js `.next` cache so stale server chunks don't keep the old throw
+const dotNextDir = path.join(root, ".next");
+if (fs.existsSync(dotNextDir)) {
+  try {
+    fs.rmSync(dotNextDir, { recursive: true, force: true });
+    console.log("[WebContainer Fix] Cleared .next cache.");
+  } catch (_) {}
+}
+
 console.log(`[WebContainer Fix] Ready (${patchedCount} file(s) patched).`);
 
-// If run with --patch-only (e.g., from postinstall), exit now and leave files patched in Bolt
 if (process.argv.includes("--patch-only")) {
   process.exit(0);
 }
 
-// Otherwise, spawn `next dev`
 const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
 const extraArgs = process.argv.slice(2);
 
