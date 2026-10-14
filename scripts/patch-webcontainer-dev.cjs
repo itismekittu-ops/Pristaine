@@ -1,112 +1,104 @@
-
+// scripts/patch-webcontainer-dev.cjs
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
 const root = process.cwd();
-const nextPackagePath = path.join(
-  root, "node_modules", "next", "package.json"
-);
-const paramsPath = path.join(
-  root, "node_modules", "next", "dist",
-  "server", "request", "params.js"
-);
-const backupPath = paramsPath + ".bolt-original";
-const marker = "BOLT_WEBCONTAINER_DEV_ONLY_FALLBACK";
+const nextDist = path.join(root, "node_modules", "next", "dist");
+const marker = "/* BOLT_WEBCONTAINER_PATCHED */";
 
-function restoreBackup() {
-  if (!fs.existsSync(backupPath)) return false;
-  fs.copyFileSync(backupPath, paramsPath);
-  fs.unlinkSync(backupPath);
-  return true;
+// Find all relevant server request files and compiled app-page dev runtimes
+function getTargetFiles(dir, results = []) {
+  if (!fs.existsSync(dir)) return results;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      getTargetFiles(fullPath, results);
+    } else if (
+      entry.isFile() &&
+      (entry.name === "params.js" ||
+        entry.name === "search-params.js" ||
+        (entry.name.includes("app-page") && entry.name.endsWith(".dev.js")))
+    ) {
+      results.push(fullPath);
+    }
+  }
+  return results;
 }
 
-function fail(message) {
-  console.error(`WebContainer workaround stopped: ${message}`);
-  process.exit(1);
+function patchFileContent(content) {
+  if (content.includes(marker)) return content;
+  if (
+    !content.includes("throwInvariantForMissingStore") &&
+    !content.includes("Expected workUnitAsyncStorage to have a store")
+  ) {
+    return content;
+  }
+
+  let updated = content;
+
+  // 1. Patch createServerParamsForServerSegment (CJS, ESM, and compiled bundles)
+  updated = updated.replace(
+    /(function createServerParamsForServerSegment\s*\([^)]*\)\s*\{[\s\S]*?)throwInvariantForMissingStore\(\)\s*;?/g,
+    `$1return createRenderParamsInDev(underlyingParams, void 0, workStore); ${marker}`
+  );
+
+  // 2. Patch createServerSearchParamsForServerPage (CJS, ESM, and compiled bundles)
+  // Note: Next 15.5.x uses either createRenderSearchParamsInDev or createRenderSearchParams
+  updated = updated.replace(
+    /(function createServerSearchParamsForServerPage\s*\([^)]*\)\s*\{[\s\S]*?)throwInvariantForMissingStore\(\)\s*;?/g,
+    `$1return (typeof createRenderSearchParamsInDev === "function" ? createRenderSearchParamsInDev(underlyingSearchParams, workStore) : createRenderSearchParams(underlyingSearchParams, workStore)); ${marker}`
+  );
+
+  return updated;
 }
 
-// Recover the original file if a previous run stopped unexpectedly.
-restoreBackup();
+const targetFiles = [
+  ...getTargetFiles(path.join(nextDist, "server", "request")),
+  ...getTargetFiles(path.join(nextDist, "esm", "server", "request")),
+  ...getTargetFiles(path.join(nextDist, "compiled", "next-server")),
+];
 
-if (process.argv.includes("--restore")) {
-  console.log("Restored any saved Next.js backup.");
+let patchedCount = 0;
+for (const file of targetFiles) {
+  try {
+    // If a backup exists from a previous run, read from the clean backup first
+    const backupPath = file + ".bolt-original";
+    const sourceContent = fs.existsSync(backupPath)
+      ? fs.readFileSync(backupPath, "utf8")
+      : fs.readFileSync(file, "utf8");
+
+    const patched = patchFileContent(sourceContent);
+    if (patched !== sourceContent) {
+      if (!fs.existsSync(backupPath)) {
+        fs.copyFileSync(file, backupPath);
+      }
+      fs.writeFileSync(file, patched, "utf8");
+      patchedCount++;
+      console.log(`[WebContainer Fix] Patched: ${path.relative(root, file)}`);
+    }
+  } catch (err) {
+    console.warn(`[WebContainer Fix] Failed to patch ${file}:`, err.message);
+  }
+}
+
+console.log(`[WebContainer Fix] Ready (${patchedCount} file(s) patched).`);
+
+// If run with --patch-only (e.g., from postinstall), exit now and leave files patched in Bolt
+if (process.argv.includes("--patch-only")) {
   process.exit(0);
 }
 
-if (!fs.existsSync(nextPackagePath) || !fs.existsSync(paramsPath)) {
-  fail("Next.js files not found. No patch applied.");
-}
-
-const version = JSON.parse(
-  fs.readFileSync(nextPackagePath, "utf8")
-).version;
-
-if (version !== "15.5.27") {
-  fail(`Expected Next.js 15.5.27; found ${version}.`);
-}
-
-const original = fs.readFileSync(paramsPath, "utf8");
-
-if (!original.includes("createRenderParamsInDev")) {
-  fail("Expected Next.js helper not found. No patch applied.");
-}
-
-const pattern =
-  /(function createServerParamsForServerSegment\s*\([^)]*\)\s*\{[\s\S]*?)throwInvariantForMissingStore\(\)\s*;?/;
-
-const patched = original.replace(
-  pattern,
-  (_, functionStart) =>
-    `${functionStart}return createRenderParamsInDev(underlyingParams, void 0, workStore); /* ${marker} */`
-);
-
-if (patched === original || !patched.includes(marker)) {
-  fail("Expected function pattern not found. No patch applied.");
-}
-
-// Save the exact original file before applying the development workaround.
-fs.copyFileSync(paramsPath, backupPath);
-
-try {
-  fs.writeFileSync(paramsPath, patched, "utf8");
-} catch (error) {
-  restoreBackup();
-  throw error;
-}
-
-let restored = false;
-
-function restoreOriginal() {
-  if (restored) return;
-  restored = true;
-  restoreBackup();
-}
-
-process.on("exit", restoreOriginal);
-
+// Otherwise, spawn `next dev`
 const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
+const extraArgs = process.argv.slice(2);
 
-const child = spawn(process.execPath, [nextBin, "dev"], {
+const child = spawn(process.execPath, [nextBin, "dev", ...extraArgs], {
   cwd: root,
   stdio: "inherit",
   env: { ...process.env, NODE_ENV: "development" },
 });
 
-for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.on(signal, () => {
-    if (child.exitCode === null) child.kill(signal);
-    else restoreOriginal();
-  });
-}
-
-child.on("error", (error) => {
-  console.error("Could not start Next.js:", error.message);
-  restoreOriginal();
-  process.exitCode = 1;
-});
-
 child.on("exit", (code, signal) => {
-  restoreOriginal();
   process.exitCode = code ?? (signal ? 1 : 0);
 });
