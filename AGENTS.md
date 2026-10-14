@@ -148,7 +148,7 @@ Hosting provider, email service and mailbox, analytics tool, OpenAI model, traci
 - Work on one story per prompt. Read only the spec sections the story references, not whole files. This file plus those sections is enough, so do not re-read every spec at the start.
 - Change only the files the story needs. Never rewrite or regenerate a whole file to make a small change, and never touch unrelated files.
 - If the same error or failing test is still there after 2 fix attempts, stop. Report the error, what you tried and your best guess. Do not keep trying.
-- Never run build, lint or test commands again without changing something first.
+- Do not repeatedly rerun a failing check without making a relevant change. After making changes, run the relevant checks to verify the fix. Avoid redundant commands that cannot provide new evidence.
 - Do not install a new dependency without asking the owner.
 - Do not add pages, features or extras that are not in a story.
 - If a story needs changes to more than about 10 files, stop and propose splitting it.
