@@ -22,10 +22,20 @@ export function HeroMedia({ poster, videoSrc, reduced, layout }: HeroMediaProps)
   const showVideo = !reduced && !!videoSrc && !videoFailed;
 
   useEffect(() => {
-    if (showVideo && videoRef.current) {
-      videoRef.current.play().catch(() => setVideoFailed(true));
-    }
-  }, [showVideo]);
+  const video = videoRef.current;
+
+  if (!showVideo || !video || !videoSrc) {
+    return;
+  }
+
+  // Reload media sources when the selected clip changes.
+  video.load();
+
+  // Start playback and fall back to the poster if playback fails.
+  video.play().catch(() => {
+    setVideoFailed(true);
+  });
+}, [showVideo, videoSrc]);
 
   return (
     <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden bg-ink-950">
