@@ -230,42 +230,68 @@ async function fetchInvitees(
   eventUri: string,
 ): Promise<CalendlyInvitee[]> {
   const allInvitees: CalendlyInvitee[] = [];
-  let nextPage: string | null = null;
+  let pageToken: string | null = null;
   let pageCount = 0;
 
-  while (pageCount < MAX_PAGES) {
-    let response: Response;
-    if (nextPage) {
-      response = await fetch(nextPage, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(API_TIMEOUT_MS),
-      });
-    } else {
-      response = await calendlyFetch(
-        "//scheduled_events/invitees",
-        { event: eventUri },
-        token,
-      );
+  // Extract the event UUID from its canonical Calendly URI.
+  let eventUuid: string;
+
+  try {
+    const parsed = new URL(eventUri);
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    const eventIndex = segments.lastIndexOf("scheduled_events");
+
+    if (eventIndex < 0 || !segments[eventIndex + 1]) {
+      throw new Error("invalid event URI");
     }
+
+    eventUuid = segments[eventIndex + 1];
+  } catch {
+    throw new Error("invalid_calendly_event_uri");
+  }
+
+  while (pageCount < MAX_PAGES) {
+    const params: Record<string, string> = {
+      count: String(PAGE_SIZE),
+    };
+
+    if (pageToken) {
+      params.page_token = pageToken;
+    }
+
+    const response = await calendlyFetch(
+      `/scheduled_events/${encodeURIComponent(eventUuid)}/invitees`,
+      params,
+      token,
+    );
 
     if (response.status === 401 || response.status === 403) {
       throw new Error(`calendly_auth_error:${response.status}`);
     }
+
     if (response.status === 429) {
       throw new Error("calendly_rate_limited");
     }
+
     if (!response.ok) {
       throw new Error(`calendly_api_error:${response.status}`);
     }
 
-    const body = (await response.json()) as CalendlyInviteeResponse;
-    allInvitees.push(...body.collection.data);
+    const body =
+      (await response.json()) as CalendlyInviteeResponse;
 
-    nextPage = body.collection.pagination?.next_page ?? null;
-    if (!nextPage) break;
+    if (!Array.isArray(body.collection)) {
+      throw new Error("calendly_invalid_invitees_response");
+    }
+
+    allInvitees.push(...body.collection);
+
+    pageToken = body.pagination?.next_page_token ?? null;
+
+    if (!pageToken) {
+      break;
+    }
+
     pageCount++;
   }
 
