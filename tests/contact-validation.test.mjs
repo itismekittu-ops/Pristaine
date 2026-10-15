@@ -81,13 +81,8 @@ const ALLOWED_ORIGINS = new Set([
   'https://pristaine.com',
   'https://www.pristaine.com',
 ]);
-const LOCALHOST_PATTERN = /^http:\/\/localhost:\d+$/;
-
 function isAllowedOrigin(origin) {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.has(origin)) return true;
-  if (LOCALHOST_PATTERN.test(origin)) return true;
-  return false;
+  return origin !== null && ALLOWED_ORIGINS.has(origin);
 }
 
 // --- Tests ---
