@@ -1,0 +1,104 @@
+{
+  "content_version": "1.0.0-draft",
+  "topic_group": "trust_pricing_privacy",
+  "description": "Draft answers for privacy, sensitive data, pricing and claims. Specific policies and commercial terms still require owner confirmation.",
+  "status_note": "All entries are drafts. Do not activate until reviewed and approved by the owner.",
+  "entries": [
+    {
+      "id": "50ecfde0-3830-5e6f-b554-e0ae3324777e",
+      "topic": "data_privacy",
+      "question_variants": [
+        "How do you handle data and privacy?",
+        "What happens to our data during an AI project?",
+        "How is customer information handled?"
+      ],
+      "answer": "Data handling should be agreed before implementation, including what is collected, how it is processed, who can access it and how long it is retained. The appropriate safeguards depend on the project and the data involved. Review the current Privacy Policy and confirm project-specific requirements before sharing customer information.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "706d90a2-bf5f-57a0-8f8d-7790b19e27f6",
+      "topic": "sensitive_information",
+      "question_variants": [
+        "Can I share sensitive details in this chat?",
+        "Should I provide my password or payment details?",
+        "What information should I not type into the AI assistant?"
+      ],
+      "answer": "Please do not share government identification numbers, passport or driver’s licence details, payment or account information, passwords, PINs, security answers, biometric data or health information in this chat. Describe your question without secret or identifying details, or contact Pristaine through the website’s contact form.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "5897e0db-da28-5f17-83fb-b7ed5f8b2a27",
+      "topic": "chat_storage_notice",
+      "question_variants": [
+        "Is this chat saved?",
+        "Does the assistant store conversations?",
+        "Is this an AI assistant that processes my message?"
+      ],
+      "answer": "Pristaine’s documented design states that chat conversations are saved and processed by an AI provider. Before sending a message, read the notice shown beside the chat and review the current Privacy Policy for the applicable details. Please do not enter sensitive information. If the notice or policy does not answer your question, use the website’s contact form.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "250b6ca0-394b-5ceb-8b5e-df3198cd7d70",
+      "topic": "pricing",
+      "question_variants": [
+        "How much does an AI project cost?",
+        "What are your chatbot prices?",
+        "Can you share your pricing?"
+      ],
+      "answer": "I do not have an approved price list to quote. Project cost depends on the requirements, scope, integrations and testing needs. Pristaine can discuss your situation through a consultation or the website’s contact form, but this assistant cannot confirm a project price or estimate.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "6fc69c0b-ac46-5102-a274-e5df9b2ee43a",
+      "topic": "guaranteed_results",
+      "question_variants": [
+        "Can you guarantee results?",
+        "Do you guarantee return on investment?",
+        "Can you promise cost savings?"
+      ],
+      "answer": "No specific outcome or return on investment should be promised before the use case is assessed and measured. A project should begin with a clear problem, agreed success measures and appropriate testing. Actual results depend on the workflow, data, implementation and how the solution is used.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "39c2db6a-8689-573f-8dbe-2eff848788bb",
+      "topic": "certifications_and_compliance",
+      "question_variants": [
+        "What certifications do you have?",
+        "Are you certified or compliant with a specific standard?",
+        "Are you SOC 2, PIPEDA or GDPR compliant?"
+      ],
+      "answer": "I do not have approved information confirming specific certifications or compliance claims, so I will not assert them. For a current, verified answer about a particular standard, ask Pristaine directly through the website’s contact form. Do not treat this response as a legal or compliance determination.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "41f8dcdc-f655-5eb7-8a22-a432f1245c57",
+      "topic": "professional_advice_limits",
+      "question_variants": [
+        "Can you give legal advice?",
+        "Can you give financial advice?",
+        "Can I use this assistant for medical advice?"
+      ],
+      "answer": "No. This assistant provides general information about AI and Pristaine’s services, not legal, medical or financial advice tailored to your situation. For decisions in those areas, consult an appropriately qualified professional.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "4864d09d-3789-552f-bfa6-9a68486a4fa5",
+      "topic": "assistant_identity",
+      "question_variants": [
+        "Are you a real person?",
+        "Am I talking to a human?",
+        "Who am I chatting with?"
+      ],
+      "answer": "I am Pristaine’s AI assistant, not a person. I can share general information about AI and Pristaine’s services, but I cannot independently confirm project-specific pricing, delivery dates, commitments or outcomes. You can request human follow-up through the Book a Consultation page or the website’s contact form.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    }
+  ]
+}

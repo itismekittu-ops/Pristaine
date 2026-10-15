@@ -1,0 +1,92 @@
+{
+  "content_version": "1.0.0-draft",
+  "topic_group": "general_ai_education",
+  "description": "Short general-knowledge answers for common AI questions. These are educational, not project-specific guarantees or professional advice.",
+  "status_note": "All entries are drafts. Do not activate until reviewed and approved by the owner.",
+  "entries": [
+    {
+      "id": "ae97f526-821a-53c2-b1ff-96eae4ff25ad",
+      "topic": "ai_automation_definition",
+      "question_variants": [
+        "What is AI automation?",
+        "How can AI automate a business workflow?",
+        "What does business process automation with AI mean?"
+      ],
+      "answer": "AI automation uses AI to help perform or support parts of a workflow—for example, interpreting incoming requests, classifying information or drafting a response. Good designs define what the AI may do, how results are checked, what happens when it is uncertain and when a person must review or take over.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "b4239fa2-30ed-582e-b917-c36772b20f7a",
+      "topic": "chatbot_vs_voice_agent",
+      "question_variants": [
+        "What is the difference between a chatbot and a voice agent?",
+        "How is Voice AI different from a website chatbot?",
+        "When should I use a chatbot versus Voice AI?"
+      ],
+      "answer": "A chatbot usually interacts through typed messages on a website or messaging channel. A voice agent interacts through spoken conversation, often by phone. The best choice depends on how customers prefer to communicate, the task to complete, the systems involved and the risks of an incorrect response.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "29c2b838-0cbe-5d46-bf26-3f19650fdac6",
+      "topic": "ai_accuracy",
+      "question_variants": [
+        "Can AI make mistakes?",
+        "Is AI always accurate?",
+        "Can I trust every AI answer?"
+      ],
+      "answer": "AI can misunderstand a question or produce an incorrect or incomplete answer. Important uses need representative testing, clear limits, checks on outputs and a safe path when the system is uncertain. High-impact decisions should not rely only on an unverified AI response.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "ae994b5c-40c7-5cac-b045-e9ebc00c4adb",
+      "topic": "ai_and_jobs",
+      "question_variants": [
+        "Will AI replace my employees?",
+        "Does automation mean replacing staff?",
+        "Should AI replace my team?"
+      ],
+      "answer": "AI does not automatically mean replacing an employee or an entire role. It may support specific tasks or automate part of a process, while people continue to handle judgment, exceptions and sensitive decisions. The right approach depends on the workflow, risks, quality requirements and the role of human oversight.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "41a5194f-2267-5d4b-8e46-63565709b6f1",
+      "topic": "ai_guardrails_definition",
+      "question_variants": [
+        "What are AI guardrails?",
+        "How can AI be kept within its intended limits?",
+        "What does safer AI behavior mean?"
+      ],
+      "answer": "AI guardrails are controls that limit how an AI system is used and how it responds. They can include input checks, approved knowledge, limits on the tasks it may perform, output checks, privacy protections, monitoring and a fallback when a check fails. The controls should match the system’s purpose and risks.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "17e0cb5e-3b8f-5926-9068-2f555ec5c29e",
+      "topic": "ai_suitability",
+      "question_variants": [
+        "Is AI right for every business?",
+        "Should every task be automated?",
+        "How do I know if a task is suitable for AI?"
+      ],
+      "answer": "Not every task is a good fit for AI. Start with a clear, repeatable problem; consider whether suitable data and system access are available; assess the impact of mistakes; and decide how outputs will be checked. A small, measurable and lower-risk use case can be a more useful starting point than automating everything at once.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "2c7d92c3-dc7d-54c8-a73f-46873944d281",
+      "topic": "customer_data_and_ai",
+      "question_variants": [
+        "Can I send customer data to an AI tool?",
+        "Is it safe to put customer information into AI?",
+        "What should a business check before using AI with personal data?"
+      ],
+      "answer": "Before using personal or confidential data with an AI system, review the purpose, consent and legal requirements, provider terms, access controls, retention, data location and what information is truly necessary. Do not paste sensitive or identifying customer details into this chat. Specific requirements should be reviewed for the actual project and jurisdiction.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    }
+  ]
+}

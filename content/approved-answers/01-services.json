@@ -1,0 +1,98 @@
+{
+  "content_version": "1.0.0-draft",
+  "topic_group": "services",
+  "description": "Draft answers about Pristaine services, based on the project specs and service descriptions.",
+  "status_note": "All entries are drafts. Do not activate until reviewed and approved by the owner.",
+  "entries": [
+    {
+      "id": "84d0919a-f564-5362-8557-c09f4294532a",
+      "topic": "services_overview",
+      "question_variants": [
+        "What do your AI services do?",
+        "What can Pristaine help my business with?",
+        "Which AI services does Pristaine offer?",
+        "What does Pristaine build?"
+      ],
+      "answer": "Pristaine focuses on four areas: conversational AI and chatbots for website and messaging conversations; Voice AI phone agents that can answer and qualify callers and support call booking; custom AI automations and integrations around existing workflows; and AI consultation to help identify a practical place to start. The best fit depends on your goals and constraints.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "2e49fcd9-6c61-55d5-9b41-047e7b5155e1",
+      "topic": "conversational_ai",
+      "question_variants": [
+        "What is conversational AI?",
+        "What is an AI chatbot?",
+        "Can Pristaine build a website chatbot?",
+        "Do you build chatbots for websites and messaging?"
+      ],
+      "answer": "Conversational AI lets people ask questions and receive responses through a chat interface or messaging channel. Pristaine describes its chatbot service as helping businesses answer customer questions across websites and messaging channels, with guardrails and testing included in the intended approach. The exact behavior and integrations should be agreed for each project.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "998f4188-6bf7-52b9-aff7-3e72396f41fa",
+      "topic": "voice_ai",
+      "question_variants": [
+        "What is Voice AI?",
+        "Do you build AI phone agents?",
+        "Can AI answer business phone calls?",
+        "Can a voice agent qualify callers and book calls?"
+      ],
+      "answer": "Voice AI uses AI to have spoken conversations, often over phone calls. Pristaine describes its Voice AI service as AI phone agents that can answer callers, qualify inquiries and support call booking. The exact call flow, integrations and situations requiring a human should be agreed and tested for each project.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "0e094bf4-5a82-58b1-a98f-fc564d9a5543",
+      "topic": "custom_ai_solutions",
+      "question_variants": [
+        "What are Pristaine AI Solutions?",
+        "Do you build custom AI automations?",
+        "Can you automate an existing workflow?",
+        "What does custom AI automation mean?"
+      ],
+      "answer": "Pristaine’s AI Solutions service focuses on custom automations and integrations built around a business’s workflows and existing tools. A suitable approach depends on the workflow, available systems and APIs, permissions, data quality and technical constraints. A specific integration should be confirmed after reviewing those details.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "db85756f-7fae-56f1-b0d0-4aa81dcebf03",
+      "topic": "ai_consultation",
+      "question_variants": [
+        "What is AI consultation?",
+        "Can you help us decide where to start with AI?",
+        "How do we find the right first AI project?",
+        "What happens in an AI consultation?"
+      ],
+      "answer": "AI consultation helps a business explore where AI may be useful first and identify a practical starting point. A useful discussion covers the business goal, current workflow, tools involved, constraints and how success could be measured. The consultation does not guarantee a particular result.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "7bf670f3-2a0d-59fa-845b-022faa3cd902",
+      "topic": "target_audience",
+      "question_variants": [
+        "Who does Pristaine work with?",
+        "Which businesses are you focused on?",
+        "Do you work with small and mid-sized businesses?",
+        "Does Pristaine serve businesses in the US and Canada?"
+      ],
+      "answer": "Pristaine’s stated audience is small and mid-sized businesses in the United States and Canada, especially businesses handling customer calls, chats and inquiries. Whether a particular project is a good fit depends on the problem to solve, the available systems and the project’s requirements.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    },
+    {
+      "id": "79601255-7fb6-5e0b-9407-11ec03bfb204",
+      "topic": "existing_tools",
+      "question_variants": [
+        "Which tools and systems can your AI connect to?",
+        "Can your solutions work with our existing software?",
+        "Will we need to replace our current tools?"
+      ],
+      "answer": "Pristaine’s AI Solutions service is intended to work around existing workflows and tools where practical. Whether a specific connection is possible depends on the systems involved, API availability, permissions, data access and technical constraints. Those details need to be reviewed before a particular integration is confirmed.",
+      "version": "1.0.0-draft",
+      "status": "draft"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "instructions": "Add UUIDs here only when a record must be permanently deleted. Prefer status=retired. The SQL generator refuses to emit DELETE without --confirm-delete.",
+  "ids": []
+}
