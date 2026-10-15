@@ -632,3 +632,106 @@ test('Token estimate: very long message over limit', () => {
   const tokens = Math.ceil(text.length / 4);
   assert.ok(tokens > 600, '3000-char message should exceed 600 token limit');
 });
+
+// --- Manual Batch 4 repair regression checks (implementation/source aligned) ---
+import { readFile } from 'node:fs/promises';
+
+const CHAT_EDGE_SOURCE = await readFile(
+  new URL('../supabase/functions/chat-assistant/index.ts', import.meta.url),
+  'utf8',
+);
+
+function testKeywordTokens(text) {
+  const stop = new Set([
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'can', 'could', 'do', 'does', 'for', 'from',
+    'how', 'i', 'in', 'is', 'it', 'me', 'my', 'of', 'on', 'or', 'our', 'please', 'the', 'to',
+    'we', 'what', 'when', 'where', 'which', 'who', 'why', 'will', 'with', 'would', 'you', 'your',
+  ]);
+  return new Set(normalize(text.replace(/[_-]/g, ' ')).split(' ')
+    .filter((token) => (token.length >= 3 || token === 'ai') && !stop.has(token)));
+}
+
+function testSelectRelevantKnowledge(question, rows) {
+  const query = testKeywordTokens(question);
+  if (!query.size) return [];
+  const overlap = (a, b) => [...a].filter((token) => b.has(token)).length;
+  return rows.map((row) => {
+    const topic = overlap(query, testKeywordTokens(row.topic));
+    const variant = row.question_variants.reduce((best, value) => Math.max(best, overlap(query, testKeywordTokens(value))), 0);
+    const answer = Math.min(3, overlap(query, testKeywordTokens(row.answer)));
+    return { row, score: topic * 2 + variant * 2 + answer, variant };
+  }).filter((item) => item.score >= 2 && (item.variant >= 1 || item.score >= 4))
+    .sort((a, b) => b.score - a.score || a.row.id.localeCompare(b.row.id))
+    .slice(0, 4).map((item) => item.row);
+}
+
+function testIsCompanySpecific(question) {
+  return [
+    /\bpristaine\b/i,
+    /\b(?:your|our)\s+(?:services?|team|company|pricing|prices|costs|process|projects?|integrations?|capabilities|clients?|customers?|certifications?|compliance|availability)\b/i,
+    /\b(?:do|does|can|will|have)\s+(?:you|pristaine)\s+(?:offer|provide|build|support|integrate|connect|work|serve|charge|cost|guarantee|certif|comply)\b/i,
+    /\bwhat (?:tools|systems|platforms|integrations?|capabilities|services?) (?:do you|does pristaine)\b/i,
+    /\b(?:does|can|will) (?:this|your|the) (?:chatbot|assistant|service|solution|system)\b/i,
+    /\bhow much\b/i,
+    /\b(?:pricing|prices?|cost|quote|certification|compliance|client list|customer list|guarantee)\b/i,
+    /\bhow long\s+(?:does|will)\s+(?:a|your|the)\s+project\b/i,
+  ].some((pattern) => pattern.test(question.toLowerCase()));
+}
+
+test('Batch 4 repair: rate limits use the existing atomic RPC, not a global chat message count', () => {
+  assert.match(CHAT_EDGE_SOURCE, /\.rpc\("check_and_record_rate_limit"/);
+  assert.match(CHAT_EDGE_SOURCE, /RATE_LIMIT_PER_MIN\s*=\s*8/);
+  assert.match(CHAT_EDGE_SOURCE, /RATE_LIMIT_PER_DAY\s*=\s*100/);
+  assert.match(CHAT_EDGE_SOURCE, /chat:ip:\$\{ipHash\}:minute/);
+  assert.match(CHAT_EDGE_SOURCE, /chat:visitor:\$\{visitorHash\}:day/);
+  assert.doesNotMatch(CHAT_EDGE_SOURCE, /\.from\("chat_messages"\)\s*\n\s*\.select\("id",\s*\{\s*count:/);
+});
+
+test('Batch 4 repair: client-supplied history is not parsed and server history is session-scoped', () => {
+  assert.match(CHAT_EDGE_SOURCE, /body\.history supplied by a browser is\s*\n\s*\/\/ ignored/);
+  assert.match(CHAT_EDGE_SOURCE, /async function loadSafeSessionHistory/);
+  assert.match(CHAT_EDGE_SOURCE, /\.eq\("session_id", session\.id\)/);
+  assert.match(CHAT_EDGE_SOURCE, /\.in\("role", \["visitor", "assistant"\]\)/);
+  assert.match(CHAT_EDGE_SOURCE, /MAX_HISTORY_TURNS\)/);
+});
+
+test('Batch 4 repair: history markers and risky history content are omitted before model calls', () => {
+  assert.match(CHAT_EDGE_SOURCE, /SENSITIVE_DETECTED\|EMAIL_REDACTED\|PHONE_REDACTED/);
+  assert.match(CHAT_EDGE_SOURCE, /detectSensitive\(content\) \|\| detectInjection\(content\)/);
+  assert.match(CHAT_EDGE_SOURCE, /maskEmailsAndPhones\(content\)/);
+});
+
+test('Batch 4 repair: only active approved-answer rows are loaded for matching and context', () => {
+  assert.match(CHAT_EDGE_SOURCE, /\.eq\("status", "active"\)/);
+  assert.match(CHAT_EDGE_SOURCE, /selectRelevantApprovedKnowledge\(message, activeAnswerRows\)/);
+  assert.match(CHAT_EDGE_SOURCE, /callModel\(message, history, relevantKnowledge\)/);
+  assert.match(CHAT_EDGE_SOURCE, /APPROVED KNOWLEDGE JSON/);
+});
+
+test('Batch 4 repair: a company-specific question without relevant approved context is routed to human contact', () => {
+  assert.equal(testIsCompanySpecific('Does Pristaine integrate with Salesforce?'), true);
+  assert.equal(testIsCompanySpecific('How much does your service cost?'), true);
+  assert.equal(testIsCompanySpecific('What systems do you integrate with?'), true);
+  assert.equal(testIsCompanySpecific('What is AI workflow automation?'), false);
+  assert.match(CHAT_EDGE_SOURCE, /isCompanySpecificQuestion\(message\) && relevantKnowledge\.length === 0/);
+  assert.match(CHAT_EDGE_SOURCE, /FALLBACK_NO_APPROVED_COMPANY_INFO/);
+});
+
+test('Batch 4 repair: relevant knowledge selection ranks matching approved topics', () => {
+  const rows = [
+    { id: 'a', topic: 'voice_ai', question_variants: ['What is Voice AI?'], answer: 'AI phone agents support calls.' },
+    { id: 'b', topic: 'privacy', question_variants: ['How is data stored?'], answer: 'Data privacy and retention.' },
+  ];
+  const selected = testSelectRelevantKnowledge('What is Voice AI for phone calls?', rows);
+  assert.ok(selected.some((row) => row.id === 'a'));
+  assert.ok(!selected.some((row) => row.id === 'b'));
+  assert.match(CHAT_EDGE_SOURCE, /MAX_RELEVANT_KNOWLEDGE_ROWS\s*=\s*4/);
+});
+
+test('Batch 4 repair: specific numeric and compliance claims must be grounded in approved content', () => {
+  assert.match(CHAT_EDGE_SOURCE, /detectUngroundedSpecificFacts/);
+  assert.match(CHAT_EDGE_SOURCE, /approvedFacts\)/);
+  assert.match(CHAT_EDGE_SOURCE, /ungrounded_specific_fact/);
+  assert.match(CHAT_EDGE_SOURCE, /SOC\\s\?2.*GDPR.*HIPAA.*PCI/);
+});
+
