@@ -181,27 +181,44 @@ async function fetchEvents(
       max_start_time: maxStartTime,
       count: String(PAGE_SIZE),
     };
+
     if (pageToken) {
       params.page_token = pageToken;
     }
 
-    const response = await calendlyFetch("/scheduled_events", params, token);
+    const response = await calendlyFetch(
+      "/scheduled_events",
+      params,
+      token,
+    );
 
     if (response.status === 401 || response.status === 403) {
       throw new Error(`calendly_auth_error:${response.status}`);
     }
+
     if (response.status === 429) {
       throw new Error("calendly_rate_limited");
     }
+
     if (!response.ok) {
       throw new Error(`calendly_api_error:${response.status}`);
     }
 
-    const body = (await response.json()) as CalendlyEventResponse;
-    allEvents.push(...body.collection.data);
+    const body =
+      (await response.json()) as CalendlyEventResponse;
 
-    pageToken = body.collection.pagination?.next_page ?? null;
-    if (!pageToken) break;
+    if (!Array.isArray(body.collection)) {
+      throw new Error("calendly_invalid_events_response");
+    }
+
+    allEvents.push(...body.collection);
+
+    pageToken = body.pagination?.next_page_token ?? null;
+
+    if (!pageToken) {
+      break;
+    }
+
     pageCount++;
   }
 
