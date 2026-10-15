@@ -4,7 +4,6 @@ import React, { useId } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { HeroMedia } from './HeroMedia';
 import { ChatBar } from './ChatBar';
-import { ServiceCaption } from './ServiceCaption';
 import { BrandStrip } from './BrandStrip';
 import { heroClips } from '../../data/heroClips';
 import { useRotatingIndex } from '../../hooks/useRotatingIndex';
