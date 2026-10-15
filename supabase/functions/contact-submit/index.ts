@@ -1,10 +1,35 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
+// ---------------------------------------------------------------------------
+// CORS: explicit allowlist — no wildcard in production
+// ---------------------------------------------------------------------------
+const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
+  "https://itismekittu-ops-pris-6wt7.bolt.host",
+  "https://pristaine.com",
+  "https://www.pristaine.com",
+]);
+
+const LOCALHOST_PATTERN = /^http:\/\/localhost:\d+$/;
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (LOCALHOST_PATTERN.test(origin)) return true;
+  return false;
+}
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed = isAllowedOrigin(origin);
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+    "Vary": "Origin",
+  };
+  if (allowed) {
+    headers["Access-Control-Allow-Origin"] = origin!;
+  }
+  return headers;
+}
 
 // ---------------------------------------------------------------------------
 // Validation constants
@@ -15,13 +40,11 @@ const MAX_MESSAGE = 2000;
 const MAX_COMPANY = 200;
 const MAX_PHONE = 30;
 const MAX_BODY_BYTES = 16_000;
-const MIN_FORM_TIME_MS = 1500; // honeypot timing: submissions faster than this are rejected
+const MIN_FORM_TIME_MS = 1500;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Allow international phone numbers: digits, spaces, +, -, (), leading +
 const PHONE_PATTERN = /^\+?[\d\s\-()]{7,30}$/;
 
-// Allowlisted source/campaign values (F9-US1: only permitted attribution)
 const ALLOWED_SOURCES = [
   "website",
   "organic",
@@ -31,7 +54,10 @@ const ALLOWED_SOURCES = [
   "paid",
 ] as const;
 
-// Sensitive-data patterns checked before persistence (BR-73)
+// Sensitive-data patterns checked before persistence (BR-73).
+// Applied to free-text fields (name, message, company, email) only — NOT
+// the dedicated phone field, since a valid phone number can contain 13–16
+// digits and would false-positive the card-number pattern.
 const SENSITIVE_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
   { name: "card_number", pattern: /\b(?:\d[ -]?){13,16}\b/ },
   { name: "ssn", pattern: /\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/ },
@@ -43,63 +69,29 @@ const SENSITIVE_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-function jsonError(status: number, code: string, message: string): Response {
+function jsonError(
+  status: number,
+  code: string,
+  message: string,
+  origin: string | null,
+): Response {
   return new Response(
     JSON.stringify({ error: code, message }),
     {
       status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
     },
   );
 }
 
 function truncateHash(ip: string): string {
   // BR-75: store only shortened/hashed IP for abuse protection
-  // Use a simple hash via crypto.subtle is async; use a synchronous truncation
   const parts = ip.split(".");
   if (parts.length === 4) {
     return parts.slice(0, 3).join(".") + ".x";
   }
-  // For IPv6 or other formats, truncate to first 2 segments
   const segments = ip.split(":");
   return segments.slice(0, 2).join(":") + "::x";
-}
-
-// ---------------------------------------------------------------------------
-// Rate limiting using Supabase table
-// ---------------------------------------------------------------------------
-
-async function checkRateLimit(
-  supabase: ReturnType<typeof createClient>,
-  identifier: string,
-): Promise<boolean> {
-  // Use a simple approach: check if there are more than 3 submissions in the last 10 minutes
-  // from this identifier. The identifier is a truncated/hashed IP.
-  const windowStart = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-
-  // We store rate-limit attempts in a dedicated table
-  const { count, error } = await supabase
-    .from("contact_rate_limits")
-    .select("id", { count: "exact", head: true })
-    .eq("identifier", identifier)
-    .gte("created_at", windowStart);
-
-  if (error) {
-    // If the table doesn't exist or there's an error, fail open (allow) but log
-    console.error("Rate limit check failed:", error.code || "unknown");
-    return true;
-  }
-
-  return (count ?? 0) < 3;
-}
-
-async function recordRateLimit(
-  supabase: ReturnType<typeof createClient>,
-  identifier: string,
-): Promise<void> {
-  await supabase
-    .from("contact_rate_limits")
-    .insert({ identifier });
 }
 
 // ---------------------------------------------------------------------------
@@ -107,35 +99,37 @@ async function recordRateLimit(
 // ---------------------------------------------------------------------------
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("Origin");
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { status: 200, headers: corsHeaders(origin) });
   }
 
   if (req.method !== "POST") {
-    return jsonError(405, "method_not_allowed", "Use POST to submit a contact form.");
+    return jsonError(405, "method_not_allowed", "Use POST to submit a contact form.", origin);
   }
 
   try {
     // --- Body size check ---
     const contentLength = req.headers.get("content-length");
     if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
-      return jsonError(413, "payload_too_large", "The submission is too large.");
+      return jsonError(413, "payload_too_large", "The submission is too large.", origin);
     }
 
     const rawText = await req.text();
     if (rawText.length > MAX_BODY_BYTES) {
-      return jsonError(413, "payload_too_large", "The submission is too large.");
+      return jsonError(413, "payload_too_large", "The submission is too large.", origin);
     }
 
     let body: Record<string, unknown>;
     try {
       body = JSON.parse(rawText);
     } catch {
-      return jsonError(400, "invalid_json", "The request body must be valid JSON.");
+      return jsonError(400, "invalid_json", "The request body must be valid JSON.", origin);
     }
 
     if (typeof body !== "object" || body === null || Array.isArray(body)) {
-      return jsonError(400, "invalid_body", "The request body must be a JSON object.");
+      return jsonError(400, "invalid_body", "The request body must be a JSON object.", origin);
     }
 
     // --- Extract fields ---
@@ -158,7 +152,7 @@ Deno.serve(async (req: Request) => {
       // Silently accept but don't save — bots get a 200 but nothing is stored
       return new Response(
         JSON.stringify({ success: true }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
       );
     }
 
@@ -166,7 +160,7 @@ Deno.serve(async (req: Request) => {
     if (formStartTime !== null) {
       const elapsed = Date.now() - formStartTime;
       if (elapsed < MIN_FORM_TIME_MS) {
-        return jsonError(422, "too_fast", "Please take a moment to fill out the form.");
+        return jsonError(422, "too_fast", "Please take a moment to fill out the form.", origin);
       }
     }
 
@@ -209,7 +203,7 @@ Deno.serve(async (req: Request) => {
     if (Object.keys(errors).length > 0) {
       return new Response(
         JSON.stringify({ error: "validation_failed", field_errors: errors }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 422, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
       );
     }
 
@@ -220,39 +214,51 @@ Deno.serve(async (req: Request) => {
     const safeCampaign = campaign.length <= 100 ? campaign : "";
 
     // --- Sensitive-data check before persistence (BR-73) ---
-    const combinedText = `${name} ${email} ${message} ${company} ${phone}`;
-    for (const { name: _patternName, pattern } of SENSITIVE_PATTERNS) {
-      if (pattern.test(combinedText)) {
+    // Check free-text fields ONLY — not the phone field, which is validated
+    // separately and can legitimately contain 13–16 digits.
+    const freeText = `${name} ${email} ${message} ${company}`;
+    for (const { pattern } of SENSITIVE_PATTERNS) {
+      if (pattern.test(freeText)) {
         return jsonError(
           422,
           "sensitive_data",
           "Your message appears to contain sensitive information (such as a card number or ID). Please remove it and try again.",
+          origin,
         );
       }
     }
 
-    // --- Rate limiting ---
-    // Use the Supabase client with the service role key for privileged operations
+    // --- Supabase client with service role key ---
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     if (!supabaseUrl || !serviceRoleKey) {
       console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return jsonError(500, "server_error", "The service is temporarily unavailable.");
+      return jsonError(500, "server_error", "The service is temporarily unavailable.", origin);
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
 
-    // Get client IP for rate limiting (trust only the platform's value, not arbitrary headers)
-    // Supabase Edge Functions provide the real client IP via the connection
+    // --- Rate limiting: atomic count-and-record via SECURITY DEFINER RPC ---
+    // Fail closed: if the rate-limit function errors, reject the submission.
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rateLimitKey = truncateHash(clientIp);
 
-    const allowed = await checkRateLimit(supabase, rateLimitKey);
-    if (!allowed) {
-      return jsonError(429, "rate_limited", "Too many submissions. Please try again later.");
+    const { data: rlData, error: rlError } = await supabase.rpc(
+      "check_and_record_rate_limit",
+      { p_identifier: rateLimitKey },
+    );
+
+    if (rlError) {
+      console.error("Rate limit check failed:", rlError.code || "unknown");
+      return jsonError(500, "server_error", "The service is temporarily unavailable.", origin);
+    }
+
+    const allowed = (rlData as Record<string, unknown>)?.allowed;
+    if (allowed !== true) {
+      return jsonError(429, "rate_limited", "Too many submissions. Please try again later.", origin);
     }
 
     // --- Atomic contact submission via SECURITY DEFINER RPC ---
@@ -270,11 +276,8 @@ Deno.serve(async (req: Request) => {
 
     if (rpcError) {
       console.error("Contact submission RPC failed:", rpcError.code || "unknown");
-      return jsonError(500, "server_error", "We could not save your message. Please try again.");
+      return jsonError(500, "server_error", "We could not save your message. Please try again.", origin);
     }
-
-    // --- Record rate-limit attempt after successful submission ---
-    await recordRateLimit(supabase, rateLimitKey);
 
     // Log only non-sensitive status info (ARC-FRM-02)
     console.log("Contact submission succeeded:", {
@@ -284,10 +287,10 @@ Deno.serve(async (req: Request) => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
     );
   } catch (err) {
     console.error("Unhandled error in contact-submit:", err instanceof Error ? err.message : "unknown");
-    return jsonError(500, "server_error", "Something went wrong. Please try again.");
+    return jsonError(500, "server_error", "Something went wrong. Please try again.", origin);
   }
 });
