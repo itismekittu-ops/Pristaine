@@ -2,3 +2,6 @@ project_id = "pristaine"
 
 [functions.contact-submit]
 verify_jwt = false
+
+[functions.calendly-sync]
+verify_jwt = false

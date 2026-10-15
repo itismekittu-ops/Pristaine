@@ -29,6 +29,7 @@ export const cookieBannerLine =
 /** Cookies section of the Privacy Policy page */
 export const cookieDetailsHref = '/privacy#cookies';
 
-/** Placeholder scheduling page until the real Calendly link is confirmed */
-export const calendlyUrl = 'https://calendly.com/pristaine';
+/** Configured Calendly scheduling page. Reads from the public env var with a documented fallback. */
+export const calendlyUrl =
+  process.env.NEXT_PUBLIC_CALENDLY_EVENT_URL || 'https://calendly.com/itismekittu/pristaine-meeting';
 export const calendlyPrivacyUrl = 'https://calendly.com/privacy';
