@@ -52,7 +52,13 @@ export function Hero({
           contained ? 'h-full' : 'h-hero min-h-hero max-h-hero'
         )}>
 
-      <HeroMedia poster={clip.poster} videoSrc={clip.videoSrc} reduced={reduced || saveData} layout={layout} />
+      <HeroMedia
+  key={`${clip.videoSrc?.webm ?? ''}|${clip.videoSrc?.mp4 ?? ''}|${clip.poster}`}
+  poster={clip.poster}
+  videoSrc={clip.videoSrc}
+  reduced={reduced || saveData}
+  layout={layout}
+/>
 
       <div className={cn('flex flex-1 items-center pb-6 pt-24', pick('px-4 lg:px-6', 'px-6', 'px-4'))}>
         <div className="mx-auto flex w-full max-w-content flex-col items-center gap-8 text-center">
