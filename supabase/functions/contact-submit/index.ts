@@ -9,13 +9,8 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   "https://www.pristaine.com",
 ]);
 
-const LOCALHOST_PATTERN = /^http:\/\/localhost:\d+$/;
-
 function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.has(origin)) return true;
-  if (LOCALHOST_PATTERN.test(origin)) return true;
-  return false;
+  return origin !== null && ALLOWED_ORIGINS.has(origin);
 }
 
 function corsHeaders(origin: string | null): Record<string, string> {
