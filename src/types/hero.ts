@@ -1,9 +1,14 @@
+export type VideoSources = {
+  webm: string;
+  mp4: string;
+};
+
 export type HeroClip = {
   slug: string;
   caption: string;
   poster: string;
-  /** Looping clip; omitted until produced. The poster is shown instead. */
-  videoSrc?: string;
+  /** Looping clip sources; when absent the poster is shown. */
+  videoSrc?: VideoSources;
 };
 
 export type BrandPlaceholder = {
