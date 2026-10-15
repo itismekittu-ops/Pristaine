@@ -289,9 +289,9 @@ test('CORS: allowed www production origin is accepted', () => {
   assert.ok(isAllowedOrigin('https://www.pristaine.com'));
 });
 
-test('CORS: localhost is accepted for development', () => {
-  assert.ok(isAllowedOrigin('http://localhost:3000'));
-  assert.ok(isAllowedOrigin('http://localhost:5173'));
+test('CORS: localhost is rejected by the production allowlist', () => {
+  assert.equal(isAllowedOrigin('http://localhost:3000'), false);
+  assert.equal(isAllowedOrigin('http://localhost:5173'), false);
 });
 
 test('CORS: unapproved origin is rejected', () => {
