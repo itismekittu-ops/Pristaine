@@ -130,22 +130,19 @@ interface CalendlyInvitee {
   canceled: boolean;
 }
 
+interface CalendlyPagination {
+  next_page: string | null;
+  next_page_token?: string | null;
+}
+
 interface CalendlyEventResponse {
-  collection: {
-    data: CalendlyEvent[];
-    pagination: {
-      next_page: string | null;
-    };
-  };
+  collection: CalendlyEvent[];
+  pagination?: CalendlyPagination;
 }
 
 interface CalendlyInviteeResponse {
-  collection: {
-    data: CalendlyInvitee[];
-    pagination: {
-      next_page: string | null;
-    };
-  };
+  collection: CalendlyInvitee[];
+  pagination?: CalendlyPagination;
 }
 
 async function getUserUri(token: string): Promise<string> {
