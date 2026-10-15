@@ -59,16 +59,26 @@ export function BookConsultation() {
   }, []);
 
   const renderEmbed = useCallback(() => {
-    const container = embedContainerRef.current;
-    if (!container || !window.Calendly) return;
+  const container = embedContainerRef.current;
 
+  if (!container || !window.Calendly) {
+    setEmbedState('error');
+    return;
+  }
+
+  try {
     container.innerHTML = '';
+
     window.Calendly.initInlineWidget({
       url: calendlyUrl,
       parentElement: container,
     });
+
     setEmbedState('loaded');
-  }, []);
+  } catch {
+    setEmbedState('error');
+  }
+}, []);
 
   const loadEmbed = useCallback(async () => {
     setEmbedState('loading');
