@@ -169,33 +169,39 @@ export function BookConsultation() {
             </div>
           )}
 
-          {embedState === 'loading' && (
-            <div
-              className="flex min-h-[400px] items-center justify-center rounded-card border border-hairline-dark bg-ink-900"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="flex flex-col items-center gap-3 text-muted-on-dark">
-                <LoaderIcon
-                  size={28}
-                  strokeWidth={1.75}
-                  className={reduced ? '' : 'animate-spin'}
-                  aria-hidden="true"
-                />
-                <span className="text-body">Loading the scheduler…</span>
-              </div>
-            </div>
-          )}
+          {showEmbed && !showDirectLink && (
+  <div className="relative">
+    <div
+      ref={embedContainerRef}
+      className={cn(
+        'calendly-inline-widget min-h-[600px] w-full rounded-card border border-hairline-dark',
+        embedState === 'loading' ? 'invisible' : ''
+      )}
+      data-url={calendlyUrl}
+      aria-label="Calendly scheduling widget"
+    />
 
-          {showEmbed && embedState !== 'loading' && !showDirectLink && (
-            <div
-              ref={embedContainerRef}
-              className="calendly-inline-widget min-h-[600px] w-full rounded-card border border-hairline-dark"
-              data-url={calendlyUrl}
-              aria-label="Calendly scheduling widget"
-            />
-          )}
-
+    {embedState === 'loading' && (
+      <div
+        className="absolute inset-0 z-10 flex items-center justify-center rounded-card border border-hairline-dark bg-ink-900"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex flex-col items-center gap-3 text-muted-on-dark">
+          <LoaderIcon
+            size={28}
+            strokeWidth={1.75}
+            className={reduced ? '' : 'animate-spin'}
+            aria-hidden="true"
+          />
+          <span className="text-body">
+            Loading the scheduler…
+          </span>
+        </div>
+      </div>
+    )}
+  </div>
+)}
           {showDirectLink && (
             <div
               className="flex flex-col items-start gap-4 rounded-card border border-hairline-dark bg-ink-900 p-6"
