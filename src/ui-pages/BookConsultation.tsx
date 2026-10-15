@@ -172,14 +172,15 @@ export function BookConsultation() {
           {showEmbed && !showDirectLink && (
   <div className="relative">
     <div
-      ref={embedContainerRef}
-      className={cn(
-        'calendly-inline-widget min-h-[600px] w-full rounded-card border border-hairline-dark',
-        embedState === 'loading' ? 'invisible' : ''
-      )}
-      data-url={calendlyUrl}
-      aria-label="Calendly scheduling widget"
-    />
+  ref={embedContainerRef}
+  className={cn(
+    'calendly-inline-widget h-[700px] min-h-[700px] w-full rounded-card border border-hairline-dark',
+    embedState === 'loading' ? 'invisible' : ''
+  )}
+  style={{ height: '700px', minWidth: '320px' }}
+  data-url={calendlyUrl}
+  aria-label="Calendly scheduling widget"
+/>
 
     {embedState === 'loading' && (
       <div
