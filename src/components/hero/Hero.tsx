@@ -59,7 +59,10 @@ export function Hero({
   layout={layout}
 />
 
-      <div className={cn('flex flex-1 items-center pb-6 pt-24', pick('px-4 lg:px-6', 'px-6', 'px-4'))}>
+      <div className={cn(
+    'relative z-10 flex flex-1 items-center justify-center pb-8 pt-16 sm:pt-20',
+    pick('px-4 lg:px-6', 'px-6', 'px-4')
+  )}>
         <div className="mx-auto flex w-full max-w-content flex-col items-center gap-8 text-center">
           <Heading
               id={headingId}
