@@ -71,7 +71,6 @@ export function Hero({
             Reliable AI for every customer conversation
           </Heading>
           <ChatBar layout={layout} reducedMotion={reduced} />
-          <ServiceCaption clips={heroClips} activeIndex={clipIndex} />
         </div>
       </div>
 
