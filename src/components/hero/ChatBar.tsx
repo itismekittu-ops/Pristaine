@@ -141,7 +141,7 @@ export function ChatBar({
       </div>
 
       <p id={noticeId} className="mx-auto max-w-prose px-4 text-center text-small text-muted-on-dark">
-        This is an AI assistant. Your chat is saved. Please don’t enter sensitive details.{' '}
+        This is an AI assistant. Chat is not yet saved. Please don’t enter sensitive details.{' '}
         <Link href="/privacy" className={withState(privacyLinkStyles)}>
           Privacy Policy
         </Link>

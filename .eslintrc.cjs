@@ -12,6 +12,8 @@ module.exports = {
     '.next',
     'out',
     'assets-source',
+    'supabase',
+    'tests',
     '.eslintrc.cjs',
   ],
   parser: '@typescript-eslint/parser',

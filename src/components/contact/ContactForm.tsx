@@ -26,6 +26,18 @@ export function ContactForm({ form, pick, labelledBy, forcedFocus }: ContactForm
 
   return (
     <form noValidate onSubmit={form.handleSubmit} aria-labelledby={labelledBy} className="flex flex-col gap-6">
+      {/* Honeypot: hidden from users, visible to bots. If filled, the server silently drops the submission. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+        <label htmlFor={`${idPrefix}-company-website`}>Website (leave blank)</label>
+        <input
+          ref={form.honeypotRef}
+          id={`${idPrefix}-company-website`}
+          type="text"
+          name="company_website"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
       {contactFieldRows.map((row) =>
       <div
         key={row.map((field) => field.name).join('-')}
