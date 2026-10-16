@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+
 
 /** Route-specific Open Graph card. Text is passed from the single SEO data source. */
 export async function GET(request: Request) {
