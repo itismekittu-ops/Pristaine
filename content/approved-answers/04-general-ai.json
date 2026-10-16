@@ -13,7 +13,7 @@
         "What does business process automation with AI mean?"
       ],
       "answer": "AI automation uses AI to help perform or support parts of a workflow—for example, interpreting incoming requests, classifying information or drafting a response. Good designs define what the AI may do, how results are checked, what happens when it is uncertain and when a person must review or take over.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -25,7 +25,7 @@
         "When should I use a chatbot versus Voice AI?"
       ],
       "answer": "A chatbot usually interacts through typed messages on a website or messaging channel. A voice agent interacts through spoken conversation, often by phone. The best choice depends on how customers prefer to communicate, the task to complete, the systems involved and the risks of an incorrect response.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -37,7 +37,7 @@
         "Can I trust every AI answer?"
       ],
       "answer": "AI can misunderstand a question or produce an incorrect or incomplete answer. Important uses need representative testing, clear limits, checks on outputs and a safe path when the system is uncertain. High-impact decisions should not rely only on an unverified AI response.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -49,7 +49,7 @@
         "Should AI replace my team?"
       ],
       "answer": "AI does not automatically mean replacing an employee or an entire role. It may support specific tasks or automate part of a process, while people continue to handle judgment, exceptions and sensitive decisions. The right approach depends on the workflow, risks, quality requirements and the role of human oversight.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -61,7 +61,7 @@
         "What does safer AI behavior mean?"
       ],
       "answer": "AI guardrails are controls that limit how an AI system is used and how it responds. They can include input checks, approved knowledge, limits on the tasks it may perform, output checks, privacy protections, monitoring and a fallback when a check fails. The controls should match the system’s purpose and risks.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -73,7 +73,7 @@
         "How do I know if a task is suitable for AI?"
       ],
       "answer": "Not every task is a good fit for AI. Start with a clear, repeatable problem; consider whether suitable data and system access are available; assess the impact of mistakes; and decide how outputs will be checked. A small, measurable and lower-risk use case can be a more useful starting point than automating everything at once.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -85,7 +85,7 @@
         "What should a business check before using AI with personal data?"
       ],
       "answer": "Before using personal or confidential data with an AI system, review the purpose, consent and legal requirements, provider terms, access controls, retention, data location and what information is truly necessary. Do not paste sensitive or identifying customer details into this chat. Specific requirements should be reviewed for the actual project and jurisdiction.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     }
   ]
