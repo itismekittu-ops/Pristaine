@@ -126,7 +126,7 @@ test('Script never connects to Supabase', () => {
 
 test('Script generates SQL file at expected path', () => {
   const result = runScript();
-  assert.match(result.stdout, /Generated: supabase\/manual\/sync-approved-answers\.sql/);
+  assert.match(result.stdout, /Generated: supabase[\\/]+manual[\\/]+sync-approved-answers\.sql/);
 });
 
 test('Generated SQL uses stable UUIDs for upsert', () => {
