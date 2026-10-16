@@ -14,7 +14,7 @@
       ],
       "answer": "Start with the business goal, the problem or workflow you want to improve, the tools currently involved and any important constraints. It also helps to describe what a useful outcome would look like. You can use the Book a Consultation page or the website’s contact form to discuss next steps.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "29053dbf-a424-50d2-b8a7-015d7487e416",
@@ -26,7 +26,7 @@
       ],
       "answer": "There is no single timeline for every AI project. Timing depends on the scope, integrations, data availability, access and permissions, testing needs and the number of workflows involved. Requirements should be clarified before a project timeline is proposed; this assistant cannot confirm a delivery date.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "e6f04d6e-e826-58b6-890b-e00b8a06bd24",
@@ -38,7 +38,7 @@
       ],
       "answer": "A test plan can cover expected questions, edge cases, privacy and security checks, unsupported requests, fallback behavior and human review. The right tests depend on the assistant’s purpose and the risks if it gives an incorrect answer. A specific project’s test status should be confirmed directly rather than assumed.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "3d87e12a-19ff-58e4-9f90-69dbd9e88adb",
@@ -50,7 +50,7 @@
       ],
       "answer": "An AI assistant should be clear when it cannot answer reliably and provide an agreed next step, such as contacting the team or requesting human help. This website offers a Book a Consultation option and a contact form. Do not assume that an immediate live transfer is available unless the project explicitly implements one.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "1469599e-279a-5001-a1d0-6e381b89159b",
@@ -62,7 +62,7 @@
       ],
       "answer": "Define the problem and a measurable objective before implementation. Depending on the use case, a team might review answer quality, successful task completion, appropriate human handoffs, response time or error rates. The measures should fit the workflow; results should be evaluated rather than promised in advance.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "f829ceaf-fa80-5807-80b4-4735e198326f",
@@ -74,7 +74,7 @@
       ],
       "answer": "Useful starting information includes the business goal, the current process, the systems involved, repetitive tasks or common customer inquiries, access or permission limits, data sensitivity and the outcome you want to measure. Do not send passwords, payment details, government IDs or other sensitive personal information through this chat.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     }
   ]
 }
