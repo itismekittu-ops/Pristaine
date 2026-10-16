@@ -600,12 +600,12 @@ async function callModel(
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: modelName,
-        messages,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        temperature: 0.3,
-        stream: false,
-      }),
+  model: modelName,
+  messages,
+  max_completion_tokens: MAX_OUTPUT_TOKENS,
+  reasoning_effort: "none",
+  stream: false,
+}),
       signal: controller.signal,
     });
 
