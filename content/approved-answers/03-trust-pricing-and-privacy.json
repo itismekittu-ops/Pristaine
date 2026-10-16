@@ -14,7 +14,7 @@
       ],
       "answer": "Data handling should be agreed before implementation, including what is collected, how it is processed, who can access it and how long it is retained. The appropriate safeguards depend on the project and the data involved. Review the current Privacy Policy and confirm project-specific requirements before sharing customer information.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "706d90a2-bf5f-57a0-8f8d-7790b19e27f6",
@@ -26,7 +26,7 @@
       ],
       "answer": "Please do not share government identification numbers, passport or driver’s licence details, payment or account information, passwords, PINs, security answers, biometric data or health information in this chat. Describe your question without secret or identifying details, or contact Pristaine through the website’s contact form.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "5897e0db-da28-5f17-83fb-b7ed5f8b2a27",
@@ -38,7 +38,7 @@
       ],
       "answer": "Pristaine’s documented design states that chat conversations are saved and processed by an AI provider. Before sending a message, read the notice shown beside the chat and review the current Privacy Policy for the applicable details. Please do not enter sensitive information. If the notice or policy does not answer your question, use the website’s contact form.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "250b6ca0-394b-5ceb-8b5e-df3198cd7d70",
@@ -50,7 +50,7 @@
       ],
       "answer": "I do not have an approved price list to quote. Project cost depends on the requirements, scope, integrations and testing needs. Pristaine can discuss your situation through a consultation or the website’s contact form, but this assistant cannot confirm a project price or estimate.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "6fc69c0b-ac46-5102-a274-e5df9b2ee43a",
@@ -62,7 +62,7 @@
       ],
       "answer": "No specific outcome or return on investment should be promised before the use case is assessed and measured. A project should begin with a clear problem, agreed success measures and appropriate testing. Actual results depend on the workflow, data, implementation and how the solution is used.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "39c2db6a-8689-573f-8dbe-2eff848788bb",
@@ -74,7 +74,7 @@
       ],
       "answer": "I do not have approved information confirming specific certifications or compliance claims, so I will not assert them. For a current, verified answer about a particular standard, ask Pristaine directly through the website’s contact form. Do not treat this response as a legal or compliance determination.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "41f8dcdc-f655-5eb7-8a22-a432f1245c57",
@@ -86,7 +86,7 @@
       ],
       "answer": "No. This assistant provides general information about AI and Pristaine’s services, not legal, medical or financial advice tailored to your situation. For decisions in those areas, consult an appropriately qualified professional.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     },
     {
       "id": "4864d09d-3789-552f-bfa6-9a68486a4fa5",
@@ -98,7 +98,7 @@
       ],
       "answer": "I am Pristaine’s AI assistant, not a person. I can share general information about AI and Pristaine’s services, but I cannot independently confirm project-specific pricing, delivery dates, commitments or outcomes. You can request human follow-up through the Book a Consultation page or the website’s contact form.",
       "version": "1.0.0-draft",
-      "status": "draft"
+      "status": "active"
     }
   ]
 }
