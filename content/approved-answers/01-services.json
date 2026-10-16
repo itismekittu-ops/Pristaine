@@ -14,7 +14,7 @@
         "What does Pristaine build?"
       ],
       "answer": "Pristaine focuses on four areas: conversational AI and chatbots for website and messaging conversations; Voice AI phone agents that can answer and qualify callers and support call booking; custom AI automations and integrations around existing workflows; and AI consultation to help identify a practical place to start. The best fit depends on your goals and constraints.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -27,7 +27,7 @@
         "Do you build chatbots for websites and messaging?"
       ],
       "answer": "Conversational AI lets people ask questions and receive responses through a chat interface or messaging channel. Pristaine describes its chatbot service as helping businesses answer customer questions across websites and messaging channels, with guardrails and testing included in the intended approach. The exact behavior and integrations should be agreed for each project.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -40,7 +40,7 @@
         "Can a voice agent qualify callers and book calls?"
       ],
       "answer": "Voice AI uses AI to have spoken conversations, often over phone calls. Pristaine describes its Voice AI service as AI phone agents that can answer callers, qualify inquiries and support call booking. The exact call flow, integrations and situations requiring a human should be agreed and tested for each project.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -53,7 +53,7 @@
         "What does custom AI automation mean?"
       ],
       "answer": "Pristaine’s AI Solutions service focuses on custom automations and integrations built around a business’s workflows and existing tools. A suitable approach depends on the workflow, available systems and APIs, permissions, data quality and technical constraints. A specific integration should be confirmed after reviewing those details.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -66,7 +66,7 @@
         "What happens in an AI consultation?"
       ],
       "answer": "AI consultation helps a business explore where AI may be useful first and identify a practical starting point. A useful discussion covers the business goal, current workflow, tools involved, constraints and how success could be measured. The consultation does not guarantee a particular result.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -79,7 +79,7 @@
         "Does Pristaine serve businesses in the US and Canada?"
       ],
       "answer": "Pristaine’s stated audience is small and mid-sized businesses in the United States and Canada, especially businesses handling customer calls, chats and inquiries. Whether a particular project is a good fit depends on the problem to solve, the available systems and the project’s requirements.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     },
     {
@@ -91,7 +91,7 @@
         "Will we need to replace our current tools?"
       ],
       "answer": "Pristaine’s AI Solutions service is intended to work around existing workflows and tools where practical. Whether a specific connection is possible depends on the systems involved, API availability, permissions, data access and technical constraints. Those details need to be reviewed before a particular integration is confirmed.",
-      "version": "1.0.0-draft",
+      "version": "1.0.0",
       "status": "active"
     }
   ]
