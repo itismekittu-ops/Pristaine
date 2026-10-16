@@ -1,0 +1,6 @@
+# Next.js generated files
+next-env.d.ts
+.next/
+out/
+build/
+dist/
