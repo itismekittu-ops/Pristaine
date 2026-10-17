@@ -8,6 +8,8 @@ const SLOW_DOWN_MS = 2000;
 const STREAM_START_MS = 700;
 const STREAM_WORD_MS = 45;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Must match FOLLOWUP_CONSENT_VERSION in the contact-submit Edge Function.
+const FOLLOWUP_CONSENT_VERSION = 'v1';
 
 let counter = 0;
 const nextId = () => `m${Date.now().toString(36)}${(counter++).toString(36)}`;
@@ -157,7 +159,7 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
   };
 
   const requestSendMessage = () => {
-    if (emailStatus === 'sent') return;
+    if (emailStatus === 'sent' || emailStatus === 'submitting') return;
     setOpen(true);
     if (emailStatus === 'declined') setEmailStatus('idle');
     offerEmail();
@@ -166,17 +168,57 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
 
   const submitEmail = (event: React.FormEvent) => {
     event.preventDefault();
-    if (EMAIL_PATTERN.test(emailValue.trim())) {
-      setEmailStatus('sent');
-    } else {
+    if (emailStatus === 'submitting') return;
+    const email = emailValue.trim();
+    if (!EMAIL_PATTERN.test(email)) {
       setEmailStatus('invalid');
       setEmailFocusToken((t) => t + 1);
+      return;
     }
+
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && !visitorIdRef.current) {
+      visitorIdRef.current = getOrCreateVisitorId();
+    }
+    const visitorId = visitorIdRef.current;
+
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !visitorId) {
+      setEmailStatus('error');
+      return;
+    }
+
+    setEmailStatus('submitting');
+
+    fetch(`${SUPABASE_URL}/functions/v1/contact-submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        mode: 'chat_followup',
+        email,
+        consent_given: true,
+        consent_line_version: FOLLOWUP_CONSENT_VERSION,
+        visitor_id: visitorId,
+        source_page: typeof window !== 'undefined' ? window.location.pathname : '/',
+      }),
+    })
+      .then(async (resp) => {
+        if (resp.ok) {
+          setEmailStatus('sent');
+        } else {
+          // Validation or server failure: keep the entered email and allow retry.
+          setEmailStatus('error');
+        }
+      })
+      .catch(() => {
+        setEmailStatus('error');
+      });
   };
 
   const setEmailValue = (value: string) => {
     setEmailValueState(value);
-    if (emailStatus === 'invalid') setEmailStatus('idle');
+    if (emailStatus === 'invalid' || emailStatus === 'error') setEmailStatus('idle');
   };
 
   const close = useCallback(() => setOpen(false), []);
@@ -188,7 +230,7 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
     emailStatus,
     emailValue,
     emailFocusToken,
-    emailOfferActive: hasEmailOffer && (emailStatus === 'idle' || emailStatus === 'invalid'),
+    emailOfferActive: hasEmailOffer && (emailStatus === 'idle' || emailStatus === 'invalid' || emailStatus === 'error'),
     send,
     close,
     requestSendMessage,

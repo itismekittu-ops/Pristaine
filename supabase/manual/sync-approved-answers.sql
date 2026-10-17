@@ -1,4 +1,4 @@
--- GENERATED FILE. Source: content/approved-answers/*.json (content version: 1.0.0-draft).
+-- GENERATED FILE. Source: content/approved-answers/*.json (content version: 1.0.0).
 -- Review this SQL before running it in Supabase SQL Editor; this script never executes it.
 -- Existing rows are matched by stable UUID. Missing source entries are NOT auto-deleted.
 BEGIN;

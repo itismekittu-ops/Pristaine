@@ -117,12 +117,14 @@ async function hubspotRequest(
 }
 
 function contactProperties(lead: Lead): Record<string, string> {
-  const nameParts = lead.name.trim().split(/\s+/).filter(Boolean);
   const properties: Record<string, string> = {
     email: lead.email_normalized || lead.email.trim().toLowerCase(),
   };
-  if (nameParts.length > 0) properties.firstname = nameParts[0];
-  if (nameParts.length > 1) properties.lastname = nameParts.slice(1).join(" ");
+  if (typeof lead.name === "string" && lead.name.trim()) {
+    const nameParts = lead.name.trim().split(/\s+/).filter(Boolean);
+    if (nameParts.length > 0) properties.firstname = nameParts[0];
+    if (nameParts.length > 1) properties.lastname = nameParts.slice(1).join(" ");
+  }
   if (lead.phone?.trim()) properties.phone = lead.phone.trim();
   if (lead.company?.trim()) properties.company = lead.company.trim();
   return properties;

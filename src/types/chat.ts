@@ -6,7 +6,7 @@ export type ChatEntry =
 {id: string;kind: 'notice';notice: ChatNoticeKind;} |
 {id: string;kind: 'email-offer';};
 
-export type EmailOfferStatus = 'idle' | 'invalid' | 'sent' | 'declined';
+export type EmailOfferStatus = 'idle' | 'invalid' | 'submitting' | 'error' | 'sent' | 'declined';
 
 export type SendResult = 'accepted' | 'kept';
 

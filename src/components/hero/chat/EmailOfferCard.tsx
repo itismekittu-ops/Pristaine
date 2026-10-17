@@ -41,6 +41,8 @@ export function EmailOfferCard({ formId, status, value, focusToken, onChange, on
   }
 
   const invalid = status === 'invalid';
+  const submitting = status === 'submitting';
+  const submissionError = status === 'error';
 
   return (
     <form
@@ -69,14 +71,21 @@ export function EmailOfferCard({ formId, status, value, focusToken, onChange, on
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="name@company.com"
+          disabled={submitting}
           aria-invalid={invalid || undefined}
-          aria-describedby={invalid ? `${errorId} ${consentId}` : consentId}
+          aria-describedby={`${errorId} ${consentId}`}
           className={emailFieldClasses} />
         
         {invalid &&
         <p id={errorId} className="flex items-center gap-2 text-small text-error-dark">
             <CircleAlertIcon size={20} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
             Enter an email address like name@company.com.
+          </p>
+        }
+        {submissionError &&
+        <p id={errorId} role="alert" className="flex items-center gap-2 text-small text-error-dark">
+            <CircleAlertIcon size={20} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
+            We couldn't send your request. Check your connection and try again — your email is kept.
           </p>
         }
       </div>
@@ -86,9 +95,22 @@ export function EmailOfferCard({ formId, status, value, focusToken, onChange, on
           Privacy Policy
         </Link>
       </p>
-      <button type="button" onClick={onDecline} className={`${withState(navLinkStyles)} -ml-3 self-start`}>
-        No thanks
-      </button>
+      <div className="flex items-center gap-3 -ml-3 self-start">
+        <button
+        type="submit"
+        disabled={submitting}
+        aria-disabled={submitting || undefined}
+        className={withState(navLinkStyles)}>
+          {submitting ? 'Sending…' : 'Send message'}
+        </button>
+        <button
+        type="button"
+        onClick={onDecline}
+        disabled={submitting}
+        className={withState(navLinkStyles)}>
+          No thanks
+        </button>
+      </div>
     </form>);
 
 }

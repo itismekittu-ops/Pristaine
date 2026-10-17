@@ -68,8 +68,8 @@ test('Script parses all content JSON files', () => {
 test('Script reports correct statuses', () => {
   const result = runScript();
   assert.match(result.stdout, /Statuses:/);
-  // All current entries are draft
-  assert.match(result.stdout, /draft=\d+/);
+  // Every entry carries a countable status; current content is active.
+  assert.match(result.stdout, /active=\d+/);
 });
 
 test('Script generates idempotent upsert SQL (ON CONFLICT)', () => {

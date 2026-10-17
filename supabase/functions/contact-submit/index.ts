@@ -40,6 +40,15 @@ const MIN_FORM_TIME_MS = 1500;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^\+?[\d\s\-()]{7,30}$/;
 
+// Chat email follow-up mode (F2-US8)
+const MAX_VISITOR_ID = 128;
+const VISITOR_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+const CONSENT_LINE_VERSION_PATTERN = /^v\d+$/;
+const FOLLOWUP_MAX_ATTEMPTS = 5;
+const FOLLOWUP_WINDOW_MINUTES = 60;
+const FOLLOWUP_CONSENT_VERSION = "v1";
+
+
 const ALLOWED_SOURCES = [
   "website",
   "organic",
@@ -90,6 +99,96 @@ function truncateHash(ip: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Chat email follow-up (F2-US8): server-side validation, rate limit, then the
+// atomic lead upsert + session link + CRM queue via submit_chat_followup RPC.
+// ---------------------------------------------------------------------------
+
+async function handleChatFollowup(
+  body: Record<string, unknown>,
+  req: Request,
+  origin: string | null,
+): Promise<Response> {
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const visitorId = typeof body.visitor_id === "string" ? body.visitor_id.trim() : "";
+  const sourcePage = typeof body.source_page === "string" ? body.source_page.trim().slice(0, 300) : "/";
+  const consentVersion = typeof body.consent_line_version === "string"
+    ? body.consent_line_version.trim()
+    : "";
+  const consentGiven = body.consent_given === true;
+
+  if (email.length > MAX_EMAIL || !EMAIL_PATTERN.test(email)) {
+    return jsonError(422, "validation_failed", "Enter a valid email address.", origin);
+  }
+
+  if (!consentGiven) {
+    return jsonError(422, "consent_required", "Consent is required to request a follow-up.", origin);
+  }
+
+  if (!visitorId || visitorId.length > MAX_VISITOR_ID || !VISITOR_ID_PATTERN.test(visitorId)) {
+    return jsonError(422, "invalid_visitor_id", "A valid chat session identifier is required.", origin);
+  }
+
+  if (consentVersion !== FOLLOWUP_CONSENT_VERSION) {
+    return jsonError(422, "invalid_consent_version", "The follow-up consent terms have changed. Please try again.", origin);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return jsonError(500, "server_error", "The service is temporarily unavailable.", origin);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  // Abuse limits, keyed on the privacy-preserving shortened IP (BR-75).
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateLimitKey = truncateHash(`chat_followup:${truncateHash(clientIp)}`);
+
+  const { data: rlData, error: rlError } = await supabase.rpc(
+    "check_and_record_rate_limit",
+    { p_identifier: rateLimitKey, p_max_attempts: FOLLOWUP_MAX_ATTEMPTS, p_window_minutes: FOLLOWUP_WINDOW_MINUTES },
+  );
+
+  if (rlError) {
+    console.error("Follow-up rate limit check failed:", rlError.code || "unknown");
+    return jsonError(500, "server_error", "The service is temporarily unavailable.", origin);
+  }
+
+  const allowed = (rlData as Record<string, unknown>)?.allowed;
+  if (allowed !== true) {
+    return jsonError(429, "rate_limited", "Too many follow-up requests. Please try again later.", origin);
+  }
+
+  const { data, error: rpcError } = await supabase.rpc("submit_chat_followup", {
+    p_email: email,
+    p_visitor_id: visitorId,
+    p_source_page: sourcePage,
+    p_consent_line_version: consentVersion,
+  });
+
+  if (rpcError) {
+    if (rpcError.message?.includes("no_matching_chat_session") || rpcError.code === "P0002") {
+      return jsonError(422, "no_matching_chat_session", "We could not find this conversation. Please try again.", origin);
+    }
+    console.error("Chat follow-up RPC failed:", rpcError.code || "unknown");
+    return jsonError(500, "server_error", "We could not save your request. Please try again.", origin);
+  }
+
+  console.log("Chat follow-up succeeded:", {
+    lead_id: (data as Record<string, unknown>)?.lead_id,
+    chat_session_id: (data as Record<string, unknown>)?.chat_session_id,
+  });
+
+  return new Response(
+    JSON.stringify({ success: true }),
+    { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
@@ -125,6 +224,14 @@ Deno.serve(async (req: Request) => {
 
     if (typeof body !== "object" || body === null || Array.isArray(body)) {
       return jsonError(400, "invalid_body", "The request body must be a JSON object.", origin);
+    }
+
+    // =====================================================================
+    // Chat email follow-up mode (F2-US8): email-only lead linked to the
+    // visitor's existing chat session. Independently validated here.
+    // =====================================================================
+    if (body.mode === "chat_followup") {
+      return handleChatFollowup(body, req, origin);
     }
 
     // --- Extract fields ---

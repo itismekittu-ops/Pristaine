@@ -138,7 +138,7 @@ export function ChatPanel(props: ChatPanelProps) {
 
           <div className={cn('flex shrink-0 flex-col gap-3 border-t border-hairline-dark py-4', padX)}>
             <p className="text-small text-muted-on-dark">
-              This is an AI assistant. Chat is not yet saved. Please don’t enter sensitive details.{' '}
+              This is an AI assistant. Conversations are saved in redacted form and may be processed by an AI provider. Please don’t enter sensitive details.{' '}
               <Link href="/privacy" className={withState(privacyLinkStyles)}>
                 Privacy Policy
               </Link>
