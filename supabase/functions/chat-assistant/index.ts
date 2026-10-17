@@ -397,11 +397,13 @@ function blockResponse(
   origin: string | null,
   answerSource = "blocked",
   safetyFlag = "blocked",
+  sessionPersisted = false,
 ): Response {
   return jsonResponse(200, {
     answer: message,
     answer_source: answerSource,
     safety_flags: [safetyFlag],
+    session_persisted: sessionPersisted,
   }, origin);
 }
 
@@ -995,7 +997,7 @@ Deno.serve(async (req: Request) => {
       const responseTime = Date.now() - startTime;
 
       // Persist (redacted)
-      await persistExchange(
+      const persisted = await persistExchange(
         supabase, visitorId, page, source,
         message, sanitized, "approved", approvedHit.id, approvedHit.version,
         null, responseTime, [],
@@ -1007,6 +1009,7 @@ Deno.serve(async (req: Request) => {
         answer_id: approvedHit.id,
         answer_version: approvedHit.version,
         response_time_ms: responseTime,
+        session_persisted: persisted !== null,
       }, origin);
     }
 
@@ -1016,7 +1019,7 @@ Deno.serve(async (req: Request) => {
     const relevantKnowledge = selectRelevantApprovedKnowledge(message, activeAnswerRows);
     if (isCompanySpecificQuestion(message) && relevantKnowledge.length === 0) {
       const responseTime = Date.now() - startTime;
-      await persistExchange(
+      const persisted = await persistExchange(
         supabase, visitorId, page, source,
         message, FALLBACK_NO_APPROVED_COMPANY_INFO, "fallback", null, INSTRUCTION_VERSION,
         null, responseTime, ["approved_knowledge_missing"],
@@ -1026,6 +1029,7 @@ Deno.serve(async (req: Request) => {
         origin,
         "fallback",
         "approved_knowledge_missing",
+        persisted !== null,
       );
     }
 
@@ -1050,12 +1054,12 @@ Deno.serve(async (req: Request) => {
     if (modelError || !modelText.trim()) {
       // GR-FAIL-04: degraded mode — fallback
       const responseTime = Date.now() - startTime;
-      await persistExchange(
+      const persisted = await persistExchange(
         supabase, visitorId, page, source,
         message, FALLBACK_UNAVAILABLE, "fallback", null, INSTRUCTION_VERSION,
         null, responseTime, ["model_unavailable"],
       );
-      return blockResponse(FALLBACK_UNAVAILABLE, origin, "fallback", "model_unavailable");
+      return blockResponse(FALLBACK_UNAVAILABLE, origin, "fallback", "model_unavailable", persisted !== null);
     }
 
     // --- Output guardrails (step 5) ---
@@ -1079,17 +1083,17 @@ Deno.serve(async (req: Request) => {
     if (!outputCheck.safe) {
       console.error("output_guardrail_failed:", outputCheck.reason);
       const responseTime = Date.now() - startTime;
-      await persistExchange(
+      const persisted = await persistExchange(
         supabase, visitorId, page, source,
         message, FALLBACK_UNSAFE_OUTPUT, "fallback", null, INSTRUCTION_VERSION,
         modelName, responseTime, [`output_check:${outputCheck.reason}`],
       );
-      return blockResponse(FALLBACK_UNSAFE_OUTPUT, origin, "fallback", `output_check:${outputCheck.reason}`);
+      return blockResponse(FALLBACK_UNSAFE_OUTPUT, origin, "fallback", `output_check:${outputCheck.reason}`, persisted !== null);
     }
 
     // --- Persist (step 6) ---
     const responseTime = Date.now() - startTime;
-    await persistExchange(
+    const persisted = await persistExchange(
       supabase, visitorId, page, source,
       message, sanitized, "ai_model", null, INSTRUCTION_VERSION,
       modelName, responseTime, [],
@@ -1101,6 +1105,7 @@ Deno.serve(async (req: Request) => {
       instruction_version: INSTRUCTION_VERSION,
       model_name: modelName,
       response_time_ms: responseTime,
+      session_persisted: persisted !== null,
     }, origin);
   } catch (err) {
     console.error("chat_assistant_unhandled_error:", err instanceof Error ? err.message : "unknown");

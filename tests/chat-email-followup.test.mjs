@@ -176,7 +176,7 @@ test('server rejects invalid or oversized visitor identifiers', () => {
   }
 });
 
-test('server rejects an unexpected consent-line version', () => {
+test('server rejects unexpected consent-line versions', () => {
   const result = serverValidateFollowup({
     email: 'jordan@example.com',
     visitor_id: 'v_1abc2def3',
@@ -196,6 +196,83 @@ test('server rejects invalid or oversized emails', () => {
     });
     assert.equal(result.error, 'validation_failed', `expected rejection for ${JSON.stringify(email)}`);
   }
+});
+
+// --- Persistence gate: email offer only after confirmed server-side save ---
+
+// Mirrors the session_persisted handling in src/hooks/useChatPanel.ts.
+function createOfferGateStateMachine() {
+  let offerShown = false;
+  let sessionPersisted = false;
+  return {
+    get offerShown() { return offerShown; },
+    get sessionPersisted() { return sessionPersisted; },
+    handleBackendResponse(data) {
+      const persisted = data?.session_persisted === true;
+      sessionPersisted = persisted;
+      // Mirrors the hook: a response without an answer never offers email.
+      if (persisted && typeof data.answer === 'string' && data.answer) offerShown = true;
+    },
+    handleLocalFallback() {
+      sessionPersisted = false;
+      offerShown = false;
+    },
+    handleBlockedResponse() {
+      // blockResponse paths never set session_persisted to true.
+      sessionPersisted = false;
+      offerShown = false;
+    },
+  };
+}
+
+test('backend response with session_persisted true permits the email offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBackendResponse({ answer: 'Hi', answer_source: 'approved', session_persisted: true });
+  assert.equal(gate.sessionPersisted, true);
+  assert.equal(gate.offerShown, true);
+});
+
+test('backend response with session_persisted false prevents the email offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBackendResponse({ answer: 'Hi', answer_source: 'fallback', session_persisted: false });
+  assert.equal(gate.offerShown, false);
+});
+
+test('missing or invalid session_persisted prevents the email offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBackendResponse({ answer: 'Hi', answer_source: 'approved' });
+  gate.handleBackendResponse({ answer: 'Hi', session_persisted: 'yes' });
+  gate.handleBackendResponse({ answer: 'Hi', session_persisted: 1 });
+  gate.handleBackendResponse(null);
+  gate.handleBackendResponse(undefined);
+  assert.equal(gate.offerShown, false);
+});
+
+test('response without an answer (invalid backend response) prevents the offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBackendResponse({ session_persisted: true });
+  gate.handleBackendResponse({});
+  assert.equal(gate.offerShown, false);
+});
+
+test('locally generated fallback never permits the offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleLocalFallback();
+  assert.equal(gate.offerShown, false);
+});
+
+test('guardrail-blocked responses never permit the offer', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBlockedResponse();
+  assert.equal(gate.offerShown, false);
+});
+
+test('a previously persisted session does not permit the offer after a failed exchange', () => {
+  const gate = createOfferGateStateMachine();
+  gate.handleBackendResponse({ answer: 'Hi', session_persisted: true });
+  assert.equal(gate.offerShown, true);
+  gate.handleLocalFallback();
+  assert.equal(gate.offerShown, false);
 });
 
 // --- Migration guarantees (asserted against the applied SQL) ---

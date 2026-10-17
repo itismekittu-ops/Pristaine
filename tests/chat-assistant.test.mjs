@@ -735,3 +735,15 @@ test('Batch 4 repair: specific numeric and compliance claims must be grounded in
   assert.match(CHAT_EDGE_SOURCE, /SOC\\s\?2.*GDPR.*HIPAA.*PCI/);
 });
 
+test('Batch 5 fix: every response path reports an explicit session_persisted value', () => {
+  // Persisted exchanges report the actual persistExchange result.
+  const persistedCount = (CHAT_EDGE_SOURCE.match(/session_persisted: persisted !== null/g) || []).length;
+  assert.equal(persistedCount, 2, 'approved and ai_model paths must report session_persisted');
+  // blockResponse defaults to false: guardrail blocks never claim persistence.
+  assert.match(
+    CHAT_EDGE_SOURCE,
+    /function blockResponse\([\s\S]*?sessionPersisted = false[\s\S]*?session_persisted: sessionPersisted/,
+  );
+});
+
+

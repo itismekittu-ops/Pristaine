@@ -47,6 +47,9 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
   const lastSentRef = useRef(0);
   const timersRef = useRef<number[]>([]);
   const visitorIdRef = useRef<string | null>(null);
+  // Email follow-up may only be offered after the backend confirmed the
+  // conversation was saved; otherwise submit_chat_followup cannot link it.
+  const sessionPersistedRef = useRef(false);
 
   useEffect(
     () => () => {
@@ -63,11 +66,11 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
   const offerEmail = () =>
   setEntries((prev) => prev.some((e) => e.kind === 'email-offer') ? prev : [...prev, { id: nextId(), kind: 'email-offer' }]);
 
-  const setAssistantAnswer = (text: string, approved: boolean) => {
+  const setAssistantAnswer = (text: string, approved: boolean, canOfferEmail: boolean) => {
     const id = nextId();
     if (approved) {
       append({ id, kind: 'assistant', text, approved: true });
-      offerEmail();
+      if (canOfferEmail) offerEmail();
     } else {
       streamingRef.current = true;
       append({ id, kind: 'assistant', text: '', streaming: true });
@@ -84,7 +87,7 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
           if (done) {
             window.clearInterval(interval);
             streamingRef.current = false;
-            offerEmail();
+            if (canOfferEmail) offerEmail();
           }
         }, STREAM_WORD_MS);
         timersRef.current.push(interval);
@@ -138,20 +141,26 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
       }),
     })
       .then((resp) => resp.json())
-      .then((data: { answer?: string; answer_source?: string }) => {
+      .then((data: { answer?: string; answer_source?: string; session_persisted?: boolean }) => {
+        // Fail closed: only an explicit true from the backend permits the offer.
+        const persisted = data.session_persisted === true;
+        sessionPersistedRef.current = persisted;
         if (data.answer) {
-          setAssistantAnswer(data.answer, data.answer_source === 'approved');
+          setAssistantAnswer(data.answer, data.answer_source === 'approved', persisted);
         } else {
-          setAssistantAnswer(generalAnswer, false);
+          sessionPersistedRef.current = false;
+          setAssistantAnswer(generalAnswer, false, false);
         }
       })
       .catch(() => {
-        // Network error or endpoint unavailable — fall back to local logic
+        // Network error or endpoint unavailable — fall back to local logic.
+        // No conversation was saved server-side, so never offer email follow-up.
+        sessionPersistedRef.current = false;
         const approved = findApprovedAnswer(text);
         if (approved) {
-          setAssistantAnswer(approved, true);
+          setAssistantAnswer(approved, true, false);
         } else {
-          setAssistantAnswer(generalAnswer, false);
+          setAssistantAnswer(generalAnswer, false, false);
         }
       });
 
@@ -161,6 +170,7 @@ export function useChatPanel({ initialEntries = [], initialOpen = false, initial
   const requestSendMessage = () => {
     if (emailStatus === 'sent' || emailStatus === 'submitting') return;
     setOpen(true);
+    if (!sessionPersistedRef.current) return;
     if (emailStatus === 'declined') setEmailStatus('idle');
     offerEmail();
     setEmailFocusToken((t) => t + 1);
