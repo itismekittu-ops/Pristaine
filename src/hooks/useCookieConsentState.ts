@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { defaultCookieChoices } from '../data/cookieCategories';
+import { consentPolicyVersion, defaultCookieChoices } from '../data/cookieCategories';
 import type { CookieChoices, CookieView } from '../types/cookies';
 
 const STORAGE_KEY = 'pristaine-cookie-choices';
+const CONSENT_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
 
 export type CookieConsentOptions = {
   /** Save choices to this browser (live site). Previews keep state in memory. */
@@ -17,6 +18,8 @@ export type CookieConsentState = {
   choices: CookieChoices;
   draft: CookieChoices;
   decided: boolean;
+  /** True when the browser sent a Global Privacy Control signal */
+  gpcActive: boolean;
   acceptAll: () => void;
   rejectNonEssential: () => void;
   openManage: () => void;
@@ -27,15 +30,61 @@ export type CookieConsentState = {
   saveChoices: () => void;
 };
 
-function readStored(): CookieChoices | null {
+type StoredConsent = {
+  version: string;
+  timestamp: number;
+  choices: CookieChoices;
+};
+
+export function detectGpc(): boolean {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+    return nav.globalPrivacyControl === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Valid stored consent only: the record must carry the current policy version,
+ * a readable timestamp and be younger than 12 months. Older-format records
+ * (choices only) and expired or version-invalidated records are discarded so
+ * the banner appears again.
+ */
+export function readStoredConsent(storage: Storage | null): StoredConsent | null {
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<CookieChoices>;
-    return { analytics: parsed.analytics === true, thirdParty: parsed.thirdParty === true };
+    const parsed = JSON.parse(raw) as Partial<StoredConsent>;
+    if (typeof parsed.timestamp !== 'number' || !Number.isFinite(parsed.timestamp)) return null;
+    if (parsed.version !== consentPolicyVersion) return null;
+    if (Date.now() - parsed.timestamp >= CONSENT_MAX_AGE_MS) return null;
+    return {
+      version: parsed.version,
+      timestamp: parsed.timestamp,
+      choices: {
+        analytics: parsed.choices?.analytics === true,
+        thirdParty: parsed.choices?.thirdParty === true,
+      },
+    };
   } catch {
     return null;
   }
+}
+
+/**
+ * BR-35: with a GPC signal, a stored affirmative choice is not applied —
+ * optional categories stay off until the visitor chooses again. A stored
+ * rejection still applies (it already matches the GPC default).
+ */
+export function shouldApplyStoredConsent(
+  stored: StoredConsent | null,
+  gpcActive: boolean,
+): boolean {
+  if (!stored) return false;
+  if (!gpcActive) return true;
+  return !(stored.choices.analytics || stored.choices.thirdParty);
 }
 
 export function useCookieConsentState({
@@ -49,14 +98,17 @@ export function useCookieConsentState({
   const [draft, setDraftState] = useState<CookieChoices>(initialChoices ?? defaultCookieChoices);
   const [decided, setDecided] = useState<boolean>(false);
   const [view, setView] = useState<CookieView>(initialView ?? 'banner');
+  const [gpcActive, setGpcActive] = useState<boolean>(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!persist) return;
-    const stored = readStored();
-    if (stored) {
-      setChoices(stored);
-      setDraftState(stored);
+    const gpc = detectGpc();
+    setGpcActive(gpc);
+    const stored = readStoredConsent(window.localStorage);
+    if (stored && shouldApplyStoredConsent(stored, gpc)) {
+      setChoices(stored.choices);
+      setDraftState(stored.choices);
       setDecided(true);
       setView('hidden');
     }
@@ -76,7 +128,12 @@ export function useCookieConsentState({
       setView('hidden');
       if (persist) {
         try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          const record: StoredConsent = {
+            version: consentPolicyVersion,
+            timestamp: Date.now(),
+            choices: next,
+          };
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
         } catch {
 
           // Storage unavailable: choices still apply for this visit
@@ -112,6 +169,7 @@ export function useCookieConsentState({
     choices,
     draft,
     decided,
+    gpcActive,
     acceptAll: () => commit({ analytics: true, thirdParty: true }),
     rejectNonEssential: () => commit({ analytics: false, thirdParty: false }),
     openManage,

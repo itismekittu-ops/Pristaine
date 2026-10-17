@@ -23,6 +23,12 @@ export const cookieCategories: CookieCategory[] = [
 
 export const defaultCookieChoices: CookieChoices = { analytics: false, thirdParty: false };
 
+/**
+ * Bump this whenever the Privacy Policy's Cookies section changes (BR-63).
+ * A change makes stored consent invalid so the banner appears again.
+ */
+export const consentPolicyVersion = 'v1';
+
 export const cookieBannerLine =
 'We use cookies to run this site and, with your permission, to measure it and load booking.';
 
