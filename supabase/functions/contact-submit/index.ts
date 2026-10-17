@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 // ---------------------------------------------------------------------------
 const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   "https://itismekittu-ops-pris-6wt7.bolt.host",
+  "https://itismekittu-ops-pris-pdv0.bolt.host",
   "https://pristaine.com",
   "https://www.pristaine.com",
 ]);
