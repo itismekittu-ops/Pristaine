@@ -1,8 +1,8 @@
 import { metadataForPath } from '../../config/seo';
-import { Services } from '../../ui-pages/Services';
+import { ServicesPage } from '../../ui-pages/ServicesPage';
 
 export const metadata = metadataForPath('/services');
 
 export default function Page() {
-  return <Services />;
+  return <ServicesPage />;
 }
