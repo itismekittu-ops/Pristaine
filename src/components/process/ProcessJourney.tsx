@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
 
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -55,9 +55,19 @@ export function ProcessJourney() {
     offset: ['start start', 'end end']
   });
 
+  const indexFromProgress = (value: number) =>
+    Math.min(STAGES.length - 1, Math.max(0, Math.floor(value * STAGES.length)));
+
   useMotionValueEvent(scrollYProgress, 'change', (value) => {
-    setActive(Math.min(STAGES.length - 1, Math.max(0, Math.floor(value * STAGES.length))));
+    setActive(indexFromProgress(value));
   });
+
+  // Re-sync after mount so the active stage is correct when the page
+  // loads at a saved scroll position (no change event fires then).
+  useEffect(() => {
+    if (!scrollDriven) return;
+    setActive(indexFromProgress(scrollYProgress.get()));
+  }, [scrollDriven, scrollYProgress]);
 
   if (scrollDriven) {
     return (
@@ -65,7 +75,7 @@ export function ProcessJourney() {
         ref={sectionRef}
         aria-labelledby={headingId}
         className="relative isolate bg-ink-950"
-        style={{ height: '340vh' }}
+        style={{ height: `${STAGES.length + 1}00vh` }}
       >
         <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
           <div className="mx-auto grid w-full max-w-content grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center gap-16 px-6">
