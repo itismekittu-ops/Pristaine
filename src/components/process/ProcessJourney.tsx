@@ -62,21 +62,33 @@ export function ProcessJourney() {
     setActive(indexFromProgress(value));
   });
 
-  // Re-sync after mount so the active stage is correct when the page
-  // loads at a saved scroll position (no change event fires then).
+  // Re-sync the active stage whenever scroll-driven mode turns on, when the
+  // viewport crosses the desktop/mobile breakpoint, or after a reload at a
+  // saved scroll position. The rAF waits one frame so layout has settled and
+  // useScroll has measured the (now stable) referenced section.
   useEffect(() => {
     if (!scrollDriven) return;
-    setActive(indexFromProgress(scrollYProgress.get()));
+    let frame = 0;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      setActive(indexFromProgress(scrollYProgress.get()));
+    });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [scrollDriven, scrollYProgress]);
 
-  if (scrollDriven) {
-    return (
-      <section
-        ref={sectionRef}
-        aria-labelledby={headingId}
-        className="relative isolate bg-ink-950"
-        style={{ height: `${STAGES.length + 1}00vh` }}
-      >
+  return (
+    <section
+      ref={sectionRef}
+      aria-labelledby={headingId}
+      className={cn(
+        'isolate bg-ink-950',
+        scrollDriven ? 'relative' : 'px-4 py-16 md:py-24 lg:px-6'
+      )}
+      style={scrollDriven ? { height: `${STAGES.length + 1}00vh` } : undefined}
+    >
+      {scrollDriven ? (
         <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
           <div className="mx-auto grid w-full max-w-content grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center gap-16 px-6">
             <div className="flex flex-col gap-10">
@@ -173,43 +185,36 @@ export function ProcessJourney() {
             </div>
           </div>
         </div>
-      </section>
-    );
-  }
-
-  return (
-    <section
-      aria-labelledby={headingId}
-      className="bg-ink-950 px-4 py-16 md:py-24 lg:px-6"
-    >
-      <div className="mx-auto flex max-w-content flex-col gap-12">
-        <h2 id={headingId} className="text-h2-m text-on-dark md:text-h2">
-          How we work
-        </h2>
-        <ol className="flex flex-col gap-8 md:gap-12">
-          {STAGES.map((stage, index) => (
-            <li
-              key={stage.id}
-              className="flex flex-col overflow-hidden rounded-card border border-hairline-dark bg-ink-900/60"
-            >
-              <img
-                src={stage.image}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="aspect-[16/10] w-full object-cover"
-              />
-              <div className="flex flex-col gap-3 p-6 md:p-8">
-                <span aria-hidden="true" className="outline-numeral text-h3-m md:text-h3">
-                  {`0${index + 1}`}
-                </span>
-                <h3 className="text-h4 text-on-dark">{stage.title}</h3>
-                <p className="max-w-prose text-body text-muted-on-dark">{stage.description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
+      ) : (
+        <div className="mx-auto flex max-w-content flex-col gap-12">
+          <h2 id={headingId} className="text-h2-m text-on-dark md:text-h2">
+            How we work
+          </h2>
+          <ol className="flex flex-col gap-8 md:gap-12">
+            {STAGES.map((stage, index) => (
+              <li
+                key={stage.id}
+                className="flex flex-col overflow-hidden rounded-card border border-hairline-dark bg-ink-900/60"
+              >
+                <img
+                  src={stage.image}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[16/10] w-full object-cover"
+                />
+                <div className="flex flex-col gap-3 p-6 md:p-8">
+                  <span aria-hidden="true" className="outline-numeral text-h3-m md:text-h3">
+                    {`0${index + 1}`}
+                  </span>
+                  <h3 className="text-h4 text-on-dark">{stage.title}</h3>
+                  <p className="max-w-prose text-body text-muted-on-dark">{stage.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </section>
   );
 }
