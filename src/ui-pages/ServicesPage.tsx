@@ -12,6 +12,27 @@ import { ClosingCta } from '../components/cta/ClosingCta';
 import { services } from '../data/services';
 import type { Service } from '../types/navigation';
 
+// Services-page-only card config: dedicated images and detail-route destinations.
+// Shared data in src/data/services.ts remains untouched for the homepage.
+const serviceCardLinks: Record<string, { href: string; image: string }> = {
+  'conversational-ai': {
+    href: '/services/conversational-ai',
+    image: '/services/conversational-ai-card.webp'
+  },
+  'voice-ai': {
+    href: '/services/voice-ai',
+    image: '/services/voice-ai-card.webp'
+  },
+  'ai-solutions': {
+    href: '/services/ai-solutions',
+    image: '/services/ai-solutions-card.webp'
+  },
+  'ai-consultation': {
+    href: '/services/ai-consultation',
+    image: '/services/ai-consultation-card.webp'
+  }
+};
+
 const HERO_VIDEO = '/videos/pristaine-services-hero-background.mp4';
 const HERO_POSTER_WEBP = '/Pristaine_Services_Hero_Poster.webp';
 const HERO_POSTER_JPG = '/Pristaine_Services_Hero_Poster.jpg';
@@ -129,12 +150,33 @@ export function ServicesPage() {
         <div className="mx-auto flex max-w-content flex-col gap-8">
           <ul className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {services.map((service) => {
-              const { slug, name, description, icon: Icon, tag, image } = service;
+              const { slug, name, description, icon: Icon, tag } = service;
+              const cardLink = serviceCardLinks[slug];
+              if (!cardLink) return null;
               return (
                 <li key={slug} id={slug} className="scroll-mt-24">
-                  <div className="relative flex aspect-card-mobile flex-col justify-end overflow-hidden rounded-card border border-hairline-dark md:aspect-card">
-                    <img src={image} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-                    <span aria-hidden="true" className="card-scrim absolute inset-x-0 bottom-0 -z-10" />
+                  <Link
+                    href={cardLink.href}
+                    className={cn(
+                      'group relative flex aspect-card-mobile flex-col justify-end overflow-hidden rounded-card border border-hairline-dark md:aspect-card',
+                      'transition-control duration-300 [perspective:1200px]',
+                      'hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.55)]',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua-400',
+                      'motion-reduce:transition-none motion-reduce:hover:translate-y-0'
+                    )}
+                    aria-label={`${name} — learn more`}
+                  >
+                    <img
+                      src={cardLink.image}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-400 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="card-scrim absolute inset-x-0 bottom-0 -z-10 bg-gradient-to-t from-ink-950/90 via-ink-950/55 to-ink-950/10"
+                    />
                     <div className="flex flex-col gap-4 p-6 md:p-8">
                       <div className="flex items-center justify-between gap-4">
                         <span className="flex h-11 w-11 items-center justify-center rounded-field border border-hairline-dark bg-ink-900/85 text-on-dark">
@@ -147,7 +189,7 @@ export function ServicesPage() {
                       <h2 className="text-h3-m text-on-dark md:text-h3">{name}</h2>
                       <p className="text-body text-muted-on-dark">{description}</p>
                     </div>
-                  </div>
+                  </Link>
                 </li>
               );
             })}
