@@ -10,6 +10,8 @@ import { withState, primaryButtonStyles } from '../utils/navStyles';
 import { useSaveData } from '../hooks/useSaveData';
 import { ClosingCta } from '../components/cta/ClosingCta';
 import { services } from '../data/services';
+import { ProcessJourney } from '../components/process/ProcessJourney';
+import { ServicesFaq } from '../components/faq/ServicesFaq';
 import type { Service } from '../types/navigation';
 
 // Services-page-only card config: dedicated images and detail-route destinations.
@@ -47,10 +49,20 @@ function ChooseService({ service, points }: ChooseServiceProps) {
   return (
     <li
       id={`choose-${slug}`}
-      className="flex scroll-mt-24 flex-col gap-4 rounded-card border border-hairline-dark bg-ink-900/60 p-6"
+      className={cn(
+        'group flex scroll-mt-24 flex-col gap-4 rounded-card border border-hairline-dark bg-ink-900/60 p-6',
+        'transition-control duration-300 [perspective:1200px]',
+        'hover:-translate-y-1 hover:border-aqua-400/40 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.55)]',
+        'motion-reduce:transition-none motion-reduce:hover:translate-y-0'
+      )}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-field border border-hairline-dark bg-ink-900/85 text-aqua-400">
+        <span
+          className={cn(
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-field border border-hairline-dark bg-ink-900/85 text-aqua-400',
+            'transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100'
+          )}
+        >
           <Icon size={24} strokeWidth={1.5} aria-hidden="true" />
         </span>
         <h3 className="text-h4 text-on-dark">{name}</h3>
@@ -71,7 +83,6 @@ function ChooseService({ service, points }: ChooseServiceProps) {
 export function ServicesPage() {
   const headingId = useId();
   const chooseHeadingId = useId();
-  const processHeadingId = useId();
   const systemReduced = useReducedMotion();
   const saveData = useSaveData();
   const reduced = !!systemReduced;
@@ -251,49 +262,11 @@ export function ServicesPage() {
         </div>
       </section>
 
-      {/* Three-step process */}
-      <section
-        aria-labelledby={processHeadingId}
-        className="px-4 py-16 md:py-24 lg:px-6"
-      >
-        <div className="mx-auto flex max-w-content flex-col gap-12">
-          <div className="flex flex-col gap-4">
-            <h2 id={processHeadingId} className="text-h2-m text-on-dark md:text-h2">
-              How we work
-            </h2>
-            <p className="max-w-prose text-body-lg-m text-muted-on-dark md:text-body-lg">
-              Three steps from first conversation to a tested, working launch.
-            </p>
-          </div>
-          <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                number: '01',
-                title: 'Understand',
-                description: 'We learn how your business works today and agree on the first problem worth solving.',
-              },
-              {
-                number: '02',
-                title: 'Design',
-                description: 'We design the solution in short cycles, sharing working versions you can steer.',
-              },
-              {
-                number: '03',
-                title: 'Test and Launch',
-                description: 'We test with real scenarios, launch when it is ready and refine from actual use.',
-              },
-            ].map((step) => (
-              <li key={step.number} className="flex flex-col gap-4 rounded-card border border-hairline-dark bg-ink-900/60 p-6">
-                <span aria-hidden="true" className="outline-numeral text-h2-m md:text-h2">
-                  {step.number}
-                </span>
-                <h3 className="text-h4 text-on-dark">{step.title}</h3>
-                <p className="text-body text-muted-on-dark">{step.description}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      {/* How we work: scroll-driven stage journey */}
+      <ProcessJourney />
+
+      {/* Services FAQ */}
+      <ServicesFaq />
 
       <ClosingCta />
     </>
