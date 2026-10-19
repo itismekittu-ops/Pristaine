@@ -107,7 +107,7 @@ export function ServicesPage() {
           >
             Find the right AI solution for your business.
           </h1>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <div className="flex flex-row flex-wrap items-center justify-center gap-4">
             <Link href="/book" className={cn(withState(primaryButtonStyles), 'px-6')}>
               Book a Consultation
             </Link>
