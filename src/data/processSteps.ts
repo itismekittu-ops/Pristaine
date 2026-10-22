@@ -11,14 +11,14 @@ export const processSteps: ProcessStep[] = [
 {
   number: '01',
   title: 'Discover',
-  timeline: 'Week 1',
+  timeline: 'Day 1',
   description:
   'We learn how your team works today, map where time is lost and agree on the first problem worth solving together.'
 },
 {
   number: '02',
   title: 'Build',
-  timeline: 'Weeks 2 to 6',
+  timeline: 'Weeks 1 to 2',
   description:
   'We design and build the tool in short cycles, sharing working versions each week so you can test it and steer it.'
 },
