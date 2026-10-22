@@ -71,7 +71,7 @@ export function Hero({
                 pick('text-display-m md:text-display', 'text-display', 'text-display-m')
               )}>
 
-            Reliable AI for every customer conversation
+            Reliable AI for Every Business Need
           </Heading>
           <ChatBar layout={layout} reducedMotion={reduced} />
         </div>
